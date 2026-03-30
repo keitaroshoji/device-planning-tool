@@ -89,6 +89,45 @@ export function ResultView() {
 
   const hasSpecialEnv = answers.environmentConditions.some((e) => e !== 'normal')
 
+  // --- 端末種類別 不足台数 ---
+  const selectedTypes = answers.deviceTypes ?? []
+
+  // 店舗合計（全拠点）/ 本部 それぞれの現状台数（機種別）
+  const currentStoreByType = Object.fromEntries(
+    selectedTypes.map((t) => [t, (answers.currentDevicesByType[t] ?? 0) * answers.locationCount])
+  )
+  const currentHQByType = Object.fromEntries(
+    selectedTypes.map((t) => [t, answers.headquartersDevicesByType[t] ?? 0])
+  )
+
+  // 理想台数を現状の機種割合で按分（全て0なら均等割り）
+  const idealByType = (() => {
+    const n = selectedTypes.length
+    if (n === 0) return {}
+    const storeSum = Object.values(currentStoreByType).reduce((a, b) => a + b, 0)
+    if (storeSum === 0) {
+      // 均等割り（端数は最初の機種に加算）
+      const base = Math.floor(idealDeviceCount / n)
+      const rem  = idealDeviceCount - base * n
+      return Object.fromEntries(selectedTypes.map((t, i) => [t, base + (i === 0 ? rem : 0)]))
+    }
+    // 比例按分（端数調整で合計を idealDeviceCount に合わせる）
+    const raw = Object.fromEntries(
+      selectedTypes.map((t) => [t, idealDeviceCount * (currentStoreByType[t] / storeSum)])
+    )
+    const floored = Object.fromEntries(selectedTypes.map((t) => [t, Math.floor(raw[t])]))
+    let remainder = idealDeviceCount - Object.values(floored).reduce((a, b) => a + b, 0)
+    const sorted = [...selectedTypes].sort((a, b) => (raw[b] % 1) - (raw[a] % 1))
+    sorted.forEach((t) => { if (remainder > 0) { floored[t]++; remainder-- } })
+    return floored
+  })()
+
+  // 機種別不足台数（店舗分のみで比較）
+  const gapByType = Object.fromEntries(
+    selectedTypes.map((t) => [t, Math.max(0, (idealByType[t] ?? 0) - currentStoreByType[t])])
+  )
+  const hasDeviceTypeData = selectedTypes.length > 0
+
   function handleReset() {
     resetWizard()
     router.push('/')
@@ -349,6 +388,92 @@ export function ResultView() {
                 </div>
               )}
             </div>
+
+            {/* ===== DEVICE TYPE GAP TABLE ===== */}
+            {hasDeviceTypeData && (
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                  <h2 className="text-sm font-semibold text-gray-700">端末種類別 必要台数と不足分</h2>
+                  {additionalDevices > 0 && (
+                    <span className="text-xs bg-red-100 text-red-600 font-semibold px-2.5 py-1 rounded">
+                      合計 {additionalDevices}台 不足
+                    </span>
+                  )}
+                </div>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-gray-50 border-b border-gray-200 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        <th className="text-left px-5 py-3">端末の種類</th>
+                        <th className="text-right px-5 py-3">
+                          現状<span className="block font-normal normal-case text-gray-400">店舗（全拠点）</span>
+                        </th>
+                        <th className="text-right px-5 py-3">
+                          現状<span className="block font-normal normal-case text-gray-400">本部・本社</span>
+                        </th>
+                        <th className="text-right px-5 py-3">
+                          理想<span className="block font-normal normal-case text-gray-400">店舗（全拠点）</span>
+                        </th>
+                        <th className="text-right px-5 py-3">
+                          不足台数<span className="block font-normal normal-case text-gray-400">店舗分</span>
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-gray-50">
+                      {selectedTypes.map((type) => {
+                        const gap = gapByType[type] ?? 0
+                        return (
+                          <tr key={type} className="hover:bg-gray-50 transition-colors">
+                            <td className="px-5 py-3.5 font-medium text-gray-700">
+                              {DEVICE_TYPE_LABELS[type]}
+                            </td>
+                            <td className="px-5 py-3.5 text-right text-gray-600">
+                              {currentStoreByType[type]}台
+                            </td>
+                            <td className="px-5 py-3.5 text-right text-gray-600">
+                              {currentHQByType[type]}台
+                            </td>
+                            <td className="px-5 py-3.5 text-right text-blue-600 font-medium">
+                              {idealByType[type] ?? 0}台
+                            </td>
+                            <td className="px-5 py-3.5 text-right">
+                              {gap > 0 ? (
+                                <span className="inline-flex items-center gap-1 text-red-600 font-bold">
+                                  ▲ {gap}台
+                                </span>
+                              ) : (
+                                <span className="text-green-600 font-medium">充足</span>
+                              )}
+                            </td>
+                          </tr>
+                        )
+                      })}
+                    </tbody>
+                    <tfoot>
+                      <tr className="border-t-2 border-gray-200 bg-gray-50 font-semibold text-sm">
+                        <td className="px-5 py-3 text-gray-700">合計</td>
+                        <td className="px-5 py-3 text-right text-gray-700">{currentStoreTotal}台</td>
+                        <td className="px-5 py-3 text-right text-gray-700">{currentHQTotal}台</td>
+                        <td className="px-5 py-3 text-right text-blue-600">{idealDeviceCount}台</td>
+                        <td className="px-5 py-3 text-right">
+                          {additionalDevices > 0 ? (
+                            <span className="text-red-600">▲ {additionalDevices}台</span>
+                          ) : (
+                            <span className="text-green-600">充足</span>
+                          )}
+                        </td>
+                      </tr>
+                    </tfoot>
+                  </table>
+                </div>
+                {additionalDevices > 0 && (
+                  <div className="px-5 py-3 border-t border-gray-100 bg-amber-50 text-xs text-amber-700">
+                    ※ 理想台数は選択された運用スタイルと現状の機種割合をもとに按分した概算値です。
+                    実際の機種構成は担当者と調整のうえ確定します。
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* ===== GAP ANALYSIS ===== */}
             <div>
