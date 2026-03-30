@@ -318,24 +318,6 @@ export function ResultView() {
               )}
             </div>
 
-            {/* ===== ENVIRONMENT WARNING ===== */}
-            {hasSpecialEnv && (
-              <div className="bg-amber-50 border border-amber-200 rounded-xl px-6 py-4">
-                <p className="text-sm font-semibold text-amber-800 mb-2">⚠ 特殊環境条件への対応が必要です</p>
-                <div className="flex flex-wrap gap-2 mb-3">
-                  {answers.environmentConditions.filter(e => e !== 'normal').map((e) => (
-                    <span key={e} className="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-medium">
-                      {ENV_LABELS[e]}
-                    </span>
-                  ))}
-                </div>
-                <p className="text-xs text-amber-700 leading-relaxed">
-                  選択された環境条件を踏まえ、防水・防塵・抗菌・耐熱など特別な仕様の端末やケースの選定が必要になる場合があります。
-                  担当者が個別にヒアリングのうえ、最適な端末構成をご提案いたします。
-                </p>
-              </div>
-            )}
-
             {/* ===== GAP ANALYSIS ===== */}
             <div>
               <h2 className="text-base font-semibold text-gray-700 mb-4">現状と理想のギャップ分析</h2>
@@ -343,18 +325,23 @@ export function ResultView() {
             </div>
 
             {/* ===== DS PRICING ===== */}
-            {additionalDevices > 0 && (
+            {(additionalDevices > 0 || hasSpecialEnv) && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
                   <h2 className="text-sm font-semibold text-gray-700">
-                    DS デバイスサービスで解決する
+                    DS デバイスサービス 概算見積
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    追加 {additionalDevices}台 のレンタルで理想の運用環境が整います
+                    {additionalDevices > 0
+                      ? `追加 ${additionalDevices}台 の基本レンタル費用と、特殊環境対応の追加費用を分けて表示します`
+                      : '特殊環境対応の追加費用が発生します（基本端末台数の追加は不要です）'}
                   </p>
                 </div>
                 <div className="p-6">
-                  <DSPricing additionalDevices={additionalDevices} />
+                  <DSPricing
+                    additionalDevices={additionalDevices}
+                    environmentConditions={answers.environmentConditions}
+                  />
                 </div>
               </div>
             )}
