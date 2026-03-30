@@ -6,11 +6,29 @@ import {
   OPERATION_STYLE_META,
   calcIdealDeviceCount,
 } from '@/src/lib/operation-style'
+import { totalCurrentDevices, totalHQDevices } from '@/src/types/answers'
 import { OrgChart } from './OrgChart'
 import { GapAnalysis, buildGapItems } from './GapAnalysis'
 import { DSPricing } from './DSPricing'
 import { Button } from '@/src/components/ui/Button'
 import { AppSidebar } from '@/src/components/ui/AppSidebar'
+
+const DEVICE_TYPE_LABELS: Record<string, string> = {
+  smartphone: 'スマートフォン',
+  tablet: 'タブレット',
+  pc: 'パソコン',
+  large_monitor: '大型モニター',
+}
+
+const ENV_LABELS: Record<string, string> = {
+  water: '💧 水・湿気',
+  dust: '🌫️ 粉塵・汚れ',
+  hygiene: '🧴 衛生管理',
+  food_grade: '🏭 食品工場規格',
+  outdoor: '☀️ 屋外・直射日光',
+  cold: '🧊 低温環境',
+  normal: '🏢 通常環境',
+}
 
 const CHALLENGE_LABELS: Record<string, string> = {
   manual_creation: 'マニュアル整備',
@@ -53,21 +71,23 @@ export function ResultView() {
     answers.locationCount,
     answers.staffPerLocation
   )
-  const additionalDevices = Math.max(0, idealDeviceCount - answers.currentDeviceCount)
+  const currentStoreTotal = totalCurrentDevices(answers) * answers.locationCount
+  const currentHQTotal = totalHQDevices(answers)
+  const currentPerLocation = totalCurrentDevices(answers)
+  const additionalDevices = Math.max(0, idealDeviceCount - currentStoreTotal)
   const devicesPerLocation = answers.locationCount > 0
     ? Math.ceil(idealDeviceCount / answers.locationCount)
     : 0
-  const currentPerLocation = answers.locationCount > 0
-    ? Math.floor(answers.currentDeviceCount / answers.locationCount)
-    : 0
 
   const gapItems = buildGapItems({
-    currentDeviceCount: answers.currentDeviceCount,
+    currentDeviceCount: currentStoreTotal,
     idealDeviceCount,
     locationCount: answers.locationCount,
     operationStyleLabel: styleMeta.label,
     hasByod: answers.operationStyle === 'byod',
   })
+
+  const hasSpecialEnv = answers.environmentConditions.some((e) => e !== 'normal')
 
   function handleReset() {
     resetWizard()
@@ -110,14 +130,12 @@ export function ResultView() {
                   ヒアリング内容サマリー
                 </span>
               </div>
-              <div className="px-6 py-4 grid grid-cols-4 gap-6 divide-x divide-gray-100">
+              <div className="px-6 py-4 grid grid-cols-3 gap-6 divide-x divide-gray-100">
                 <div className="pr-6">
                   <p className="text-xs text-gray-400 mb-1.5">業種・事業形態</p>
-                  <p className="text-sm font-medium text-gray-700">
+                  <p className="text-sm font-medium text-gray-700 mb-2">
                     {answers.isFranchise ? 'FC事業' : '一般事業'}
                   </p>
-                </div>
-                <div className="pl-6 pr-6">
                   <p className="text-xs text-gray-400 mb-1.5">業務の課題</p>
                   <div className="flex flex-wrap gap-1">
                     {answers.challenges.map((c) => (
@@ -129,19 +147,45 @@ export function ResultView() {
                 </div>
                 <div className="pl-6 pr-6">
                   <p className="text-xs text-gray-400 mb-1.5">活用シーン</p>
-                  <div className="flex flex-wrap gap-1">
+                  <div className="flex flex-wrap gap-1 mb-3">
                     {answers.useCases.map((u) => (
                       <span key={u} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded">
                         {USE_CASE_LABELS[u]}
                       </span>
                     ))}
                   </div>
+                  <p className="text-xs text-gray-400 mb-1.5">運用する端末</p>
+                  <div className="flex flex-wrap gap-1">
+                    {answers.deviceTypes.map((d) => (
+                      <span key={d} className="text-xs bg-indigo-50 text-indigo-600 px-2 py-0.5 rounded">
+                        {DEVICE_TYPE_LABELS[d]}
+                      </span>
+                    ))}
+                  </div>
+                  {answers.environmentConditions.length > 0 && !answers.environmentConditions.every(e => e === 'normal') && (
+                    <div className="mt-2">
+                      <p className="text-xs text-gray-400 mb-1.5">利用環境条件</p>
+                      <div className="flex flex-wrap gap-1">
+                        {answers.environmentConditions.filter(e => e !== 'normal').map((e) => (
+                          <span key={e} className="text-xs bg-amber-50 text-amber-700 px-2 py-0.5 rounded">
+                            {ENV_LABELS[e]}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="pl-6">
                   <p className="text-xs text-gray-400 mb-1.5">選択した運用スタイル</p>
-                  <p className="text-sm font-medium text-blue-600">
+                  <p className="text-sm font-medium text-blue-600 mb-3">
                     {styleMeta.emoji} {styleMeta.label}
                   </p>
+                  <p className="text-xs text-gray-400 mb-1">規模</p>
+                  <p className="text-sm text-gray-700">{answers.locationCount}拠点 / 拠点あたり{answers.staffPerLocation}名</p>
+                  <div className="mt-1.5 text-xs text-gray-500 space-y-0.5">
+                    <div>🏢 本部端末合計: <span className="font-medium">{currentHQTotal}台</span></div>
+                    <div>🏪 店舗端末合計: <span className="font-medium">{currentStoreTotal}台</span></div>
+                  </div>
                 </div>
               </div>
             </div>
@@ -159,7 +203,7 @@ export function ResultView() {
                       <span className="text-sm font-semibold text-gray-700">現状の運用</span>
                     </div>
                     <span className="text-xs text-gray-400">
-                      {answers.currentDeviceCount}台 / {answers.locationCount}拠点
+                      {currentStoreTotal}台（店舗計） / {answers.locationCount}拠点
                     </span>
                   </div>
                   <div className="p-5 space-y-5">
@@ -168,7 +212,7 @@ export function ResultView() {
                       <OrgChart
                         locationCount={answers.locationCount}
                         devicesPerLocation={currentPerLocation}
-                        totalDevices={answers.currentDeviceCount}
+                        totalDevices={currentStoreTotal}
                         label="現状"
                         variant="current"
                       />
@@ -177,15 +221,15 @@ export function ResultView() {
                     {/* Issues */}
                     <div className="space-y-2">
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">現状の課題</p>
-                      {answers.currentDeviceCount === 0 ? (
+                      {currentStoreTotal === 0 ? (
                         <>
                           <IssueRow level="high" text="業務でモバイル端末が使えず、紙・口頭に依存" />
                           <IssueRow level="high" text="マニュアルを現場でリアルタイム参照できない" />
                           <IssueRow level="high" text="スタッフ教育に時間・人手がかかる" />
                         </>
-                      ) : idealDeviceCount > answers.currentDeviceCount ? (
+                      ) : idealDeviceCount > currentStoreTotal ? (
                         <>
-                          <IssueRow level="high" text={`端末が${additionalDevices}台不足（充足率 ${Math.round((answers.currentDeviceCount / idealDeviceCount) * 100)}%）`} />
+                          <IssueRow level="high" text={`端末が${additionalDevices}台不足（充足率 ${Math.round((currentStoreTotal / idealDeviceCount) * 100)}%）`} />
                           <IssueRow level="medium" text="端末の取り合いや待ち時間が発生している" />
                           <IssueRow level="medium" text="全員が同時にマニュアルを参照できない" />
                         </>
@@ -199,12 +243,12 @@ export function ResultView() {
 
                     {/* Metrics */}
                     <div className="grid grid-cols-3 gap-2">
-                      <MetricCell label="端末台数" value={`${answers.currentDeviceCount}台`} />
+                      <MetricCell label="店舗端末（計）" value={`${currentStoreTotal}台`} />
                       <MetricCell label="1拠点あたり" value={`${currentPerLocation}台`} />
                       <MetricCell
                         label="充足率"
-                        value={idealDeviceCount > 0 ? `${Math.round((answers.currentDeviceCount / idealDeviceCount) * 100)}%` : '—'}
-                        highlight={answers.currentDeviceCount >= idealDeviceCount ? 'green' : 'red'}
+                        value={idealDeviceCount > 0 ? `${Math.round((currentStoreTotal / idealDeviceCount) * 100)}%` : '—'}
+                        highlight={currentStoreTotal >= idealDeviceCount ? 'green' : 'red'}
                       />
                     </div>
                   </div>
@@ -271,6 +315,24 @@ export function ResultView() {
                 </div>
               )}
             </div>
+
+            {/* ===== ENVIRONMENT WARNING ===== */}
+            {hasSpecialEnv && (
+              <div className="bg-amber-50 border border-amber-200 rounded-xl px-6 py-4">
+                <p className="text-sm font-semibold text-amber-800 mb-2">⚠ 特殊環境条件への対応が必要です</p>
+                <div className="flex flex-wrap gap-2 mb-3">
+                  {answers.environmentConditions.filter(e => e !== 'normal').map((e) => (
+                    <span key={e} className="text-xs bg-amber-100 text-amber-800 px-2.5 py-1 rounded font-medium">
+                      {ENV_LABELS[e]}
+                    </span>
+                  ))}
+                </div>
+                <p className="text-xs text-amber-700 leading-relaxed">
+                  選択された環境条件を踏まえ、防水・防塵・抗菌・耐熱など特別な仕様の端末やケースの選定が必要になる場合があります。
+                  担当者が個別にヒアリングのうえ、最適な端末構成をご提案いたします。
+                </p>
+              </div>
+            )}
 
             {/* ===== GAP ANALYSIS ===== */}
             <div>

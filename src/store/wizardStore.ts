@@ -4,7 +4,7 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { WizardAnswers, INITIAL_ANSWERS } from '@/src/types/answers'
 
-export const TOTAL_STEPS = 5
+export const TOTAL_STEPS = 6
 
 interface WizardState {
   currentStep: number

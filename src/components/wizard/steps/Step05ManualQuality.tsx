@@ -21,13 +21,13 @@ const OPTIONS: { key: ManualQuality; emoji: string; label: string; description: 
   },
 ]
 
-export function Step04ManualQuality() {
+export function Step05ManualQuality() {
   const router = useRouter()
   const { answers, updateAnswers, nextStep } = useWizardStore()
 
   function handleNext() {
     nextStep()
-    router.push('/wizard?step=5')
+    router.push('/wizard?step=6')
   }
 
   const canProceed = answers.manualQuality !== null
@@ -35,7 +35,7 @@ export function Step04ManualQuality() {
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-1">Step 4</p>
+        <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-1">Step 5</p>
         <h1 className="text-xl font-semibold text-gray-800">マニュアルの作り方のイメージは？</h1>
         <p className="mt-1 text-sm text-gray-500">コンテンツ作成のスタイルを教えてください</p>
       </div>

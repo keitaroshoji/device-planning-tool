@@ -31,12 +31,28 @@ export type ShootingViewpoint = 'pov' | 'third_person' | 'both' | null
 export type ManualQuality = 'casual' | 'rich' | null
 
 /**
+ * 運用する端末の種類
+ */
+export type DeviceType =
+  | 'smartphone'     // スマートフォン
+  | 'tablet'         // タブレット
+  | 'pc'             // パソコン
+  | 'large_monitor'  // 大型モニター
+
+/**
+ * 利用環境・付帯条件
+ */
+export type EnvironmentCondition =
+  | 'water'      // 水・湿気（厨房・屋外など）
+  | 'dust'       // 粉塵・汚れ（工場・建設など）
+  | 'hygiene'    // 衛生管理（医療・食品調理）
+  | 'food_grade' // 食品工場規格（HACCP等への準拠が必要）
+  | 'outdoor'    // 屋外・直射日光
+  | 'cold'       // 低温環境（冷凍・冷蔵倉庫など）
+  | 'normal'     // 特別な条件なし（通常オフィス・店舗）
+
+/**
  * 運用スタイル
- * group_training  : 集合研修タイプ（少ない端末で多くの人が閲覧）
- * group_shared    : グループ保有タイプ（グループごとに端末を共有）
- * workplace_unit  : 職場単位タイプ（店舗・職場ごとに端末を保持）
- * individual      : 個人割り振りタイプ（スタッフ1人に1台）
- * byod            : BYODタイプ（個人端末を業務活用）
  */
 export type OperationStyle =
   | 'group_training'
@@ -58,14 +74,31 @@ export interface WizardAnswers {
   shootingEnvironment: ShootingEnvironment
   shootingViewpoint: ShootingViewpoint
 
-  // Step 4: マニュアルの品質
+  // Step 4: 端末の種類 & 利用環境
+  deviceTypes: DeviceType[]
+  environmentConditions: EnvironmentCondition[]
+
+  // Step 5: マニュアルの品質
   manualQuality: ManualQuality
 
-  // Step 5: 運用スタイルと現状確認
+  // Step 6: 運用スタイルと現状確認
   operationStyle: OperationStyle | null
-  locationCount: number    // 拠点・店舗数
-  staffPerLocation: number // 拠点あたりスタッフ数
-  currentDeviceCount: number // 現在の端末台数（合計）
+  locationCount: number
+  staffPerLocation: number
+  /** 店舗・拠点の端末種類ごとの現在の台数 */
+  currentDevicesByType: Partial<Record<DeviceType, number>>
+  /** 本部・本社の端末種類ごとの現在の台数 */
+  headquartersDevicesByType: Partial<Record<DeviceType, number>>
+}
+
+/** 店舗・拠点の端末合計 */
+export function totalCurrentDevices(a: WizardAnswers): number {
+  return Object.values(a.currentDevicesByType).reduce((s, n) => s + (n ?? 0), 0)
+}
+
+/** 本部・本社の端末合計 */
+export function totalHQDevices(a: WizardAnswers): number {
+  return Object.values(a.headquartersDevicesByType).reduce((s, n) => s + (n ?? 0), 0)
 }
 
 export const INITIAL_ANSWERS: WizardAnswers = {
@@ -75,9 +108,12 @@ export const INITIAL_ANSWERS: WizardAnswers = {
   useCases: [],
   shootingEnvironment: null,
   shootingViewpoint: null,
+  deviceTypes: [],
+  environmentConditions: [],
   manualQuality: null,
   operationStyle: null,
   locationCount: 1,
   staffPerLocation: 5,
-  currentDeviceCount: 0,
+  currentDevicesByType: {},
+  headquartersDevicesByType: {},
 }

@@ -2,14 +2,21 @@
 
 import { useRouter } from 'next/navigation'
 import { useWizardStore } from '@/src/store/wizardStore'
-import { OperationStyle } from '@/src/types/answers'
+import { DeviceType, OperationStyle } from '@/src/types/answers'
 import {
   OPERATION_STYLE_META,
   recommendOperationStyles,
 } from '@/src/lib/operation-style'
 import { Button } from '@/src/components/ui/Button'
 
-export function Step05OperationStyle() {
+const DEVICE_TYPE_LABELS: Record<DeviceType, string> = {
+  smartphone: 'スマートフォン',
+  tablet: 'タブレット',
+  pc: 'パソコン',
+  large_monitor: '大型モニター',
+}
+
+export function Step06OperationStyle() {
   const router = useRouter()
   const { answers, updateAnswers, completeWizard } = useWizardStore()
 
@@ -29,16 +36,45 @@ export function Step05OperationStyle() {
     router.push('/result')
   }
 
-  const canProceed =
-    answers.operationStyle !== null &&
-    answers.locationCount >= 1 &&
-    answers.staffPerLocation >= 1
+  function handleLocationCountChange(raw: string) {
+    const n = parseInt(raw, 10)
+    updateAnswers({ locationCount: isNaN(n) ? 0 : n })
+  }
+
+  function handleStaffChange(raw: string) {
+    const n = parseInt(raw, 10)
+    updateAnswers({ staffPerLocation: isNaN(n) ? 0 : n })
+  }
+
+  function handleStoreDeviceChange(deviceType: DeviceType, raw: string) {
+    const n = parseInt(raw, 10)
+    updateAnswers({
+      currentDevicesByType: {
+        ...answers.currentDevicesByType,
+        [deviceType]: isNaN(n) ? 0 : n,
+      },
+    })
+  }
+
+  function handleHQDeviceChange(deviceType: DeviceType, raw: string) {
+    const n = parseInt(raw, 10)
+    updateAnswers({
+      headquartersDevicesByType: {
+        ...answers.headquartersDevicesByType,
+        [deviceType]: isNaN(n) ? 0 : n,
+      },
+    })
+  }
+
+  const canProceed = answers.operationStyle !== null
+
+  const selectedDeviceTypes = answers.deviceTypes
 
   return (
     <div className="space-y-6">
       <div>
-        <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-1">Step 5</p>
-        <h1 className="text-xl font-semibold text-gray-800">運用スタイルを選んでください</h1>
+        <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-1">Step 6</p>
+        <h1 className="text-xl font-semibold text-gray-800">運用スタイルと現在の規模</h1>
         <p className="mt-1 text-sm text-gray-500">
           ヒアリング内容をもとに、おすすめのスタイルを上位に表示しています
         </p>
@@ -82,7 +118,6 @@ export function Step05OperationStyle() {
                   </div>
                   <p className="text-xs text-gray-500 mt-0.5">{meta.description}</p>
 
-                  {/* Expanded detail when selected */}
                   {isSelected && (
                     <div className="mt-3 grid grid-cols-2 gap-3 pt-3 border-t border-blue-100">
                       <div>
@@ -135,12 +170,9 @@ export function Step05OperationStyle() {
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                min={1}
-                max={9999}
-                value={answers.locationCount}
-                onChange={(e) =>
-                  updateAnswers({ locationCount: Math.max(1, parseInt(e.target.value) || 1) })
-                }
+                value={answers.locationCount || ''}
+                onChange={(e) => handleLocationCountChange(e.target.value)}
+                placeholder="例：10"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
               <span className="text-sm text-gray-400 shrink-0">拠点</span>
@@ -152,38 +184,88 @@ export function Step05OperationStyle() {
             <div className="flex items-center gap-2">
               <input
                 type="number"
-                min={1}
-                max={9999}
-                value={answers.staffPerLocation}
-                onChange={(e) =>
-                  updateAnswers({ staffPerLocation: Math.max(1, parseInt(e.target.value) || 1) })
-                }
+                value={answers.staffPerLocation || ''}
+                onChange={(e) => handleStaffChange(e.target.value)}
+                placeholder="例：5"
                 className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
               />
               <span className="text-sm text-gray-400 shrink-0">人</span>
             </div>
           </div>
         </div>
-
-        <div>
-          <label className="block text-xs font-medium text-gray-500 mb-1">
-            現在の端末台数（合計）
-          </label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              min={0}
-              max={99999}
-              value={answers.currentDeviceCount}
-              onChange={(e) =>
-                updateAnswers({ currentDeviceCount: Math.max(0, parseInt(e.target.value) || 0) })
-              }
-              className="w-36 border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400"
-            />
-            <span className="text-sm text-gray-400">台（スマホ・タブレット等。なければ 0）</span>
-          </div>
-        </div>
       </div>
+
+      {/* Per-device-type current counts */}
+      {selectedDeviceTypes.length > 0 && (
+        <div className="space-y-4 pt-4 border-t border-gray-100">
+          <p className="text-sm font-medium text-gray-700">現在お持ちの端末台数</p>
+          <p className="text-xs text-gray-400">
+            端末の種類ごとに、本部・本社と店舗それぞれの台数を入力してください（未使用は0）
+          </p>
+
+          {/* Table header */}
+          <div className="grid grid-cols-[1fr_1fr_1fr] gap-3 text-xs font-medium text-gray-500 pb-1 border-b border-gray-100">
+            <div>端末の種類</div>
+            <div className="text-center">🏢 本部・本社</div>
+            <div className="text-center">🏪 店舗（1拠点あたり）</div>
+          </div>
+
+          {selectedDeviceTypes.map((deviceType) => (
+            <div key={deviceType} className="grid grid-cols-[1fr_1fr_1fr] gap-3 items-center">
+              <div className="text-sm text-gray-700 font-medium">
+                {DEVICE_TYPE_LABELS[deviceType]}
+              </div>
+
+              {/* HQ count */}
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  value={answers.headquartersDevicesByType[deviceType] ?? ''}
+                  onChange={(e) => handleHQDeviceChange(deviceType, e.target.value)}
+                  placeholder="0"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+                />
+                <span className="text-xs text-gray-400 shrink-0">台</span>
+              </div>
+
+              {/* Store count */}
+              <div className="flex items-center gap-1.5">
+                <input
+                  type="number"
+                  value={answers.currentDevicesByType[deviceType] ?? ''}
+                  onChange={(e) => handleStoreDeviceChange(deviceType, e.target.value)}
+                  placeholder="0"
+                  className="w-full border border-gray-300 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-400 text-center"
+                />
+                <span className="text-xs text-gray-400 shrink-0">台</span>
+              </div>
+            </div>
+          ))}
+
+          {/* Summary */}
+          {(Object.keys(answers.currentDevicesByType).length > 0 || Object.keys(answers.headquartersDevicesByType).length > 0) && (
+            <div className="bg-gray-50 rounded-lg px-4 py-3 text-xs text-gray-500 border border-gray-100">
+              <div className="flex gap-6">
+                <span>
+                  本部合計:{' '}
+                  <span className="font-semibold text-gray-700">
+                    {Object.values(answers.headquartersDevicesByType).reduce((s, n) => s + (n ?? 0), 0)}台
+                  </span>
+                </span>
+                <span>
+                  店舗合計（全拠点）:{' '}
+                  <span className="font-semibold text-gray-700">
+                    {Object.values(answers.currentDevicesByType).reduce((s, n) => s + (n ?? 0), 0) * answers.locationCount}台
+                    <span className="text-gray-400 font-normal ml-1">
+                      （{Object.values(answers.currentDevicesByType).reduce((s, n) => s + (n ?? 0), 0)}台/拠点 × {answers.locationCount}拠点）
+                    </span>
+                  </span>
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
 
       <div className="pt-2">
         <Button size="lg" className="w-full" onClick={handleSubmit} disabled={!canProceed}>
