@@ -1,8 +1,7 @@
 'use client'
 
-import { useState, useEffect, ReactNode } from 'react'
+import { useState, ReactNode } from 'react'
 
-const STORAGE_KEY = 'ds-tool-auth'
 const CORRECT_PASSWORD = 'lean2026'
 
 interface PasswordGateProps {
@@ -10,22 +9,14 @@ interface PasswordGateProps {
 }
 
 export function PasswordGate({ children }: PasswordGateProps) {
-  const [authed, setAuthed] = useState<boolean | null>(null)
+  const [authed, setAuthed] = useState(false)
   const [input, setInput] = useState('')
   const [error, setError] = useState(false)
   const [shake, setShake] = useState(false)
 
-  useEffect(() => {
-    const stored = typeof window !== 'undefined'
-      ? sessionStorage.getItem(STORAGE_KEY)
-      : null
-    setAuthed(stored === 'ok')
-  }, [])
-
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (input === CORRECT_PASSWORD) {
-      sessionStorage.setItem(STORAGE_KEY, 'ok')
       setAuthed(true)
     } else {
       setError(true)
@@ -34,9 +25,6 @@ export function PasswordGate({ children }: PasswordGateProps) {
       setTimeout(() => setShake(false), 600)
     }
   }
-
-  // Loading state (before hydration check)
-  if (authed === null) return null
 
   // Authenticated — render children
   if (authed) return <>{children}</>
