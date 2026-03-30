@@ -124,7 +124,7 @@ export function ResultView() {
               条件を変更する
             </button>
             <Button variant="outline" size="sm" onClick={handleReset}>
-              やり直す
+              最初からやり直す
             </Button>
           </div>
         </header>
