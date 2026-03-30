@@ -35,11 +35,12 @@ export function Step04ManualQuality() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">マニュアルの作り方のイメージは？</h1>
-        <p className="mt-1 text-slate-500 text-sm">コンテンツ作成のスタイルを教えてください</p>
+        <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-1">Step 4</p>
+        <h1 className="text-xl font-semibold text-gray-800">マニュアルの作り方のイメージは？</h1>
+        <p className="mt-1 text-sm text-gray-500">コンテンツ作成のスタイルを教えてください</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-4">
+      <div className="space-y-2">
         {OPTIONS.map((item) => (
           <ChoiceCard
             key={item.key ?? ''}
@@ -52,18 +53,13 @@ export function Step04ManualQuality() {
         ))}
       </div>
 
-      <div className="bg-blue-50 border border-blue-200 rounded-xl p-4 text-sm text-blue-700">
-        💡 <strong>Teachme Biz</strong> を使えば、スマホ撮影からプロ品質の動画マニュアルまで対応。端末セットとのセット提案もできます。
+      <div className="bg-blue-50 border border-blue-100 rounded-lg p-3 text-sm text-blue-700">
+        <span className="font-semibold">Teachme Biz</span> を使えば、スマホ撮影からプロ品質の動画マニュアルまで対応。端末セットとのセット提案も可能です。
       </div>
 
       <div className="pt-2">
-        <Button
-          size="lg"
-          className="w-full"
-          onClick={handleNext}
-          disabled={!canProceed}
-        >
-          次へ →
+        <Button size="lg" className="w-full" onClick={handleNext} disabled={!canProceed}>
+          次へ
         </Button>
       </div>
     </div>

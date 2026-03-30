@@ -10,53 +10,60 @@ interface GapAnalysisProps {
 }
 
 const SEVERITY_CONFIG = {
-  high: { bg: 'bg-red-50', border: 'border-red-200', badge: 'bg-red-100 text-red-700', dot: 'bg-red-500', label: '要対応' },
-  medium: { bg: 'bg-amber-50', border: 'border-amber-200', badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400', label: '改善余地あり' },
-  low: { bg: 'bg-yellow-50', border: 'border-yellow-100', badge: 'bg-yellow-100 text-yellow-700', dot: 'bg-yellow-400', label: '軽微' },
-  ok: { bg: 'bg-green-50', border: 'border-green-200', badge: 'bg-green-100 text-green-700', dot: 'bg-green-500', label: '問題なし' },
+  high:   { badge: 'bg-red-100 text-red-700',    dot: 'bg-red-400',   label: '要対応' },
+  medium: { badge: 'bg-amber-100 text-amber-700', dot: 'bg-amber-400', label: '改善余地あり' },
+  low:    { badge: 'bg-yellow-100 text-yellow-700',dot: 'bg-yellow-400',label: '軽微' },
+  ok:     { badge: 'bg-green-100 text-green-700', dot: 'bg-green-400', label: '問題なし' },
 }
 
 export function GapAnalysis({ items }: GapAnalysisProps) {
   return (
-    <div className="overflow-hidden rounded-2xl border border-slate-200">
+    <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="grid grid-cols-[1fr_1fr_1fr_auto] bg-slate-50 border-b border-slate-200 text-xs font-semibold text-slate-500 uppercase tracking-wide">
-        <div className="px-4 py-3">評価項目</div>
-        <div className="px-4 py-3 border-l border-slate-200 text-red-500">🔴 現状</div>
-        <div className="px-4 py-3 border-l border-slate-200 text-blue-500">🔵 理想</div>
-        <div className="px-4 py-3 border-l border-slate-200">ギャップ</div>
+      <div className="grid grid-cols-[1.2fr_1fr_1fr_120px] bg-gray-50 border-b border-gray-200">
+        <div className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">評価項目</div>
+        <div className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide border-l border-gray-200">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />現状
+          </span>
+        </div>
+        <div className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide border-l border-gray-200">
+          <span className="flex items-center gap-1.5">
+            <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />理想
+          </span>
+        </div>
+        <div className="px-5 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide border-l border-gray-200">ギャップ</div>
       </div>
 
       {/* Rows */}
-      {items.map((item, i) => {
-        const cfg = SEVERITY_CONFIG[item.severity]
-        return (
-          <div
-            key={i}
-            className={`grid grid-cols-[1fr_1fr_1fr_auto] border-b last:border-b-0 border-slate-100 ${cfg.bg}`}
-          >
-            <div className="px-4 py-3 text-sm font-semibold text-slate-700">
-              {item.dimension}
+      <div className="divide-y divide-gray-50">
+        {items.map((item, i) => {
+          const cfg = SEVERITY_CONFIG[item.severity]
+          return (
+            <div key={i} className="grid grid-cols-[1.2fr_1fr_1fr_120px] hover:bg-gray-50 transition-colors">
+              <div className="px-5 py-3.5 text-sm font-medium text-gray-700 flex items-center gap-2">
+                <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} shrink-0`} />
+                {item.dimension}
+              </div>
+              <div className="px-5 py-3.5 border-l border-gray-100 text-sm text-gray-600">
+                {item.current}
+              </div>
+              <div className="px-5 py-3.5 border-l border-gray-100 text-sm text-gray-700">
+                {item.ideal}
+              </div>
+              <div className="px-5 py-3.5 border-l border-gray-100 flex items-center">
+                <span className={`text-xs font-semibold px-2.5 py-1 rounded ${cfg.badge}`}>
+                  {cfg.label}
+                </span>
+              </div>
             </div>
-            <div className="px-4 py-3 border-l border-slate-200 text-sm text-slate-600">
-              {item.current}
-            </div>
-            <div className="px-4 py-3 border-l border-slate-200 text-sm text-blue-700 font-medium">
-              {item.ideal}
-            </div>
-            <div className="px-4 py-3 border-l border-slate-200 flex items-center">
-              <span className={`text-xs font-bold px-2.5 py-1 rounded-full ${cfg.badge}`}>
-                {cfg.label}
-              </span>
-            </div>
-          </div>
-        )
-      })}
+          )
+        })}
+      </div>
     </div>
   )
 }
 
-/** ヒアリング結果からギャップ分析データを生成 */
 export function buildGapItems({
   currentDeviceCount,
   idealDeviceCount,
@@ -71,13 +78,13 @@ export function buildGapItems({
   hasByod: boolean
 }): GapItem[] {
   const deviceGapRatio = idealDeviceCount > 0 ? currentDeviceCount / idealDeviceCount : 1
-  const deviceGap = idealDeviceCount - currentDeviceCount
-
   return [
     {
       dimension: '端末充足率',
-      current: currentDeviceCount === 0 ? '端末なし' : `${currentDeviceCount}台 (${Math.round(deviceGapRatio * 100)}%)`,
-      ideal: `${idealDeviceCount}台 (100%)`,
+      current: currentDeviceCount === 0
+        ? '端末なし'
+        : `${currentDeviceCount}台（${Math.round(deviceGapRatio * 100)}%）`,
+      ideal: `${idealDeviceCount}台（100%）`,
       severity: deviceGapRatio >= 1 ? 'ok' : deviceGapRatio >= 0.7 ? 'low' : deviceGapRatio >= 0.4 ? 'medium' : 'high',
     },
     {

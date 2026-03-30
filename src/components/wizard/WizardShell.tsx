@@ -2,14 +2,14 @@
 
 import { useEffect } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
-import { useWizardStore, TOTAL_STEPS } from '@/src/store/wizardStore'
+import { useWizardStore } from '@/src/store/wizardStore'
 import { StepProgress } from '@/src/components/ui/StepProgress'
 import { StepRouter } from './StepRouter'
 
 export function WizardShell() {
   const router = useRouter()
   const searchParams = useSearchParams()
-  const { currentStep, setStep, prevStep, isComplete } = useWizardStore()
+  const { currentStep, setStep, prevStep, isComplete, answers } = useWizardStore()
 
   // Sync URL param → store on initial load
   useEffect(() => {
@@ -22,9 +22,12 @@ export function WizardShell() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
+  // isComplete かつ operationStyle が入力済みの場合のみ結果へ遷移
   useEffect(() => {
-    if (isComplete) router.push('/result')
-  }, [isComplete, router])
+    if (isComplete && answers.operationStyle !== null) {
+      router.push('/result')
+    }
+  }, [isComplete, answers.operationStyle, router])
 
   function handleBack() {
     if (currentStep === 1) {
@@ -36,36 +39,41 @@ export function WizardShell() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-slate-50 flex flex-col">
-      {/* Header */}
-      <header className="bg-white border-b border-slate-200 shadow-sm sticky top-0 z-10">
-        <div className="max-w-[1800px] mx-auto px-8 py-4 flex items-center gap-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col">
+      {/* Top bar — Teachme-style */}
+      <header className="bg-white border-b border-gray-200 sticky top-0 z-10">
+        <div className="max-w-[1800px] mx-auto px-6 h-14 flex items-center gap-4">
+          {/* Back */}
           <button
             onClick={handleBack}
-            className="p-2 rounded-xl text-slate-500 hover:bg-slate-100 transition shrink-0"
+            className="p-1.5 rounded text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition-colors"
             aria-label="戻る"
           >
             <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
             </svg>
           </button>
-          <div className="flex-1 max-w-xl">
-            <StepProgress currentStep={currentStep} />
-          </div>
-          <div className="ml-auto flex items-center gap-2 shrink-0">
-            <div className="w-8 h-8 rounded-lg bg-blue-600 flex items-center justify-center text-white font-bold text-sm">
-              S
+
+          {/* Logo */}
+          <div className="flex items-center gap-2 shrink-0">
+            <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
+              <span className="text-white text-xs font-bold">S</span>
             </div>
-            <span className="text-sm font-semibold text-slate-600 hidden md:block">
-              Studist DRS
-            </span>
+            <span className="text-sm font-semibold text-gray-700">Studist DRS</span>
+          </div>
+
+          <div className="w-px h-5 bg-gray-200 mx-1" />
+
+          {/* Progress */}
+          <div className="flex-1 max-w-sm">
+            <StepProgress currentStep={currentStep} />
           </div>
         </div>
       </header>
 
-      {/* Body — centered, comfortable width */}
-      <main className="flex-1 flex items-start justify-center py-10 px-4">
-        <div className="w-full max-w-2xl">
+      {/* Page body */}
+      <main className="flex-1 flex justify-center py-10 px-4">
+        <div className="w-full max-w-xl bg-white rounded-xl border border-gray-200 p-8 shadow-sm">
           <StepRouter />
         </div>
       </main>

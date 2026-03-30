@@ -2,173 +2,154 @@ import Link from 'next/link'
 
 export default function Home() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-700 via-blue-600 to-indigo-700 flex flex-col">
-      {/* Nav */}
-      <nav className="max-w-[1800px] mx-auto w-full px-10 py-5 flex items-center justify-between">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center text-white font-bold">
-            S
-          </div>
-          <span className="text-white font-semibold tracking-wide">Studist DRS</span>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* ===== LEFT SIDEBAR (dark — Teachme style) ===== */}
+      <aside className="w-16 bg-gray-900 flex flex-col items-center py-5 gap-6 shrink-0">
+        {/* Logo */}
+        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
+          <span className="text-white font-bold text-base">S</span>
         </div>
-        <span className="text-blue-200 text-sm">デバイスレンタルサービス</span>
-      </nav>
+        {/* Decorative nav dots */}
+        {['🏠', '📋', '📊', '⚙️'].map((icon, i) => (
+          <div
+            key={i}
+            className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg
+              ${i === 0 ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'}
+              cursor-default`}
+          >
+            <span className="text-base">{icon}</span>
+          </div>
+        ))}
+        {/* Bottom */}
+        <div className="mt-auto w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 text-xs font-semibold">
+          U
+        </div>
+      </aside>
 
-      {/* Hero */}
-      <div className="flex-1 flex items-center">
-        <div className="max-w-[1800px] mx-auto w-full px-10 py-10 grid grid-cols-2 gap-16 items-center">
+      {/* ===== MAIN AREA ===== */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <header className="bg-white border-b border-gray-200 h-14 flex items-center px-8 gap-4">
+          <h1 className="text-sm font-semibold text-gray-700">デバイスプランニング</h1>
+          <div className="w-px h-4 bg-gray-200" />
+          <span className="text-sm text-gray-400">Studist デバイスレンタルサービス</span>
+          <div className="ml-auto">
+            <Link
+              href="/wizard?step=1"
+              className="inline-flex items-center gap-1.5 bg-blue-600 text-white text-sm font-medium px-4 py-2 rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              <span className="text-base leading-none">+</span>
+              診断を開始する
+            </Link>
+          </div>
+        </header>
 
-          {/* Left: Copy */}
-          <div className="space-y-8">
-            <div className="space-y-3">
-              <div className="inline-flex items-center gap-2 bg-white/10 backdrop-blur rounded-full px-4 py-1.5 text-sm font-medium text-blue-100">
-                <span>⏱</span> 所要時間 約3分
-              </div>
-              <h1 className="text-5xl font-extrabold text-white leading-tight">
-                デバイスプランニング
-                <br />
-                <span className="text-blue-200">診断ツール</span>
-              </h1>
-              <p className="text-blue-100 text-xl leading-relaxed">
-                5つの質問に答えるだけで、
-                <br />
-                貴社に最適なデバイス活用プランと
-                <br />
-                現状とのギャップを可視化します。
+        {/* Content */}
+        <main className="flex-1 p-8">
+          <div className="max-w-[1600px] mx-auto space-y-8">
+
+            {/* Page title */}
+            <div>
+              <h2 className="text-xl font-semibold text-gray-800">
+                デバイスプランニング 診断ツール
+              </h2>
+              <p className="mt-1 text-sm text-gray-500">
+                5つの質問に答えるだけで、貴社に最適なデバイス活用プランと現状のギャップを可視化します
               </p>
             </div>
 
-            <div className="space-y-3">
-              <Link
-                href="/wizard?step=1"
-                className="inline-flex items-center gap-3 bg-white text-blue-700 font-bold text-lg px-10 py-4 rounded-2xl shadow-xl hover:bg-blue-50 hover:scale-[1.02] transition-all"
-              >
-                診断スタート →
-              </Link>
-              <p className="text-blue-300 text-sm">
-                入力情報はプランご提案の目的にのみ使用します
-              </p>
-            </div>
-
-            {/* Step preview */}
-            <div className="flex items-center gap-2 flex-wrap">
-              {[
-                '業種',
-                '業務の課題',
-                '活用シーン',
-                'マニュアル品質',
-                '運用スタイル',
-              ].map((s, i) => (
-                <div key={s} className="flex items-center gap-2">
-                  <div className="flex items-center gap-1.5 bg-white/10 rounded-full px-3 py-1 text-xs text-blue-100">
-                    <span className="w-4 h-4 rounded-full bg-blue-400 text-white text-[10px] font-bold flex items-center justify-center">
-                      {i + 1}
-                    </span>
-                    {s}
+            {/* Step overview table */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 flex items-center justify-between">
+                <h3 className="text-sm font-semibold text-gray-700">診断ステップ</h3>
+                <span className="text-xs text-gray-400">所要時間 約3分</span>
+              </div>
+              <div className="divide-y divide-gray-50">
+                {[
+                  { step: 'Step 1', label: '業種・事業形態', desc: '業種とFC/非FC事業の確認', icon: '🏢' },
+                  { step: 'Step 2', label: '業務の課題', desc: '現在抱えている課題を選択（複数可）', icon: '📋' },
+                  { step: 'Step 3', label: '想定される活用シーン', desc: '端末・機材の利用目的を選択', icon: '📱' },
+                  { step: 'Step 4', label: 'マニュアルの品質', desc: 'コンテンツ作成のスタイルを選択', icon: '📝' },
+                  { step: 'Step 5', label: '運用スタイルと現状確認', desc: '理想の運用スタイルと現在の台数を入力', icon: '📊' },
+                ].map((s) => (
+                  <div key={s.step} className="flex items-center gap-4 px-6 py-4 hover:bg-gray-50 transition-colors">
+                    <span className="text-xl w-8 text-center">{s.icon}</span>
+                    <div className="w-20 shrink-0">
+                      <span className="text-xs font-semibold text-blue-600 bg-blue-50 px-2 py-0.5 rounded">
+                        {s.step}
+                      </span>
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-sm font-medium text-gray-800">{s.label}</p>
+                      <p className="text-xs text-gray-400 mt-0.5">{s.desc}</p>
+                    </div>
+                    <svg className="w-4 h-4 text-gray-300 shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+                    </svg>
                   </div>
-                  {i < 4 && <span className="text-blue-400 text-xs">›</span>}
-                </div>
-              ))}
-              <div className="flex items-center gap-1.5 bg-amber-400/20 border border-amber-300/40 rounded-full px-3 py-1 text-xs text-amber-200">
-                ✨ 結果表示
+                ))}
               </div>
             </div>
-          </div>
 
-          {/* Right: Result preview mockup */}
-          <div className="space-y-4">
-            <div className="bg-white/10 backdrop-blur-sm rounded-3xl p-1 border border-white/20 shadow-2xl">
-              <div className="bg-white rounded-2xl overflow-hidden">
-                {/* Mock header */}
-                <div className="bg-slate-800 px-5 py-3 flex items-center gap-3">
-                  <div className="flex gap-1.5">
-                    <div className="w-3 h-3 rounded-full bg-red-400" />
-                    <div className="w-3 h-3 rounded-full bg-yellow-400" />
-                    <div className="w-3 h-3 rounded-full bg-green-400" />
-                  </div>
-                  <div className="flex-1 bg-slate-700 rounded-md h-5 mx-4" />
+            {/* Result preview + CTA grid */}
+            <div className="grid grid-cols-3 gap-6">
+              {/* CTA card */}
+              <div className="col-span-1 bg-blue-600 rounded-xl p-6 text-white flex flex-col justify-between">
+                <div>
+                  <p className="text-blue-200 text-xs font-semibold uppercase tracking-widest mb-2">
+                    無料診断
+                  </p>
+                  <h3 className="text-xl font-bold leading-snug">
+                    最適なデバイスプランを
+                    <br />診断する
+                  </h3>
+                  <p className="text-blue-200 text-sm mt-3">
+                    ヒアリング結果から現状と理想のギャップを可視化し、具体的なプランをご提案します。
+                  </p>
                 </div>
+                <Link
+                  href="/wizard?step=1"
+                  className="mt-6 block bg-white text-blue-600 text-center text-sm font-semibold px-4 py-2.5 rounded-lg hover:bg-blue-50 transition-colors"
+                >
+                  診断を開始する →
+                </Link>
+              </div>
 
-                {/* Mock result content */}
-                <div className="p-5 space-y-4">
-                  <div className="text-xs font-semibold text-slate-400 uppercase tracking-widest">
-                    診断結果 — 現状 vs 理想の比較
+              {/* Feature cards */}
+              <div className="col-span-2 grid grid-cols-2 gap-4">
+                {[
+                  {
+                    icon: '📊',
+                    title: '現状 vs 理想の比較',
+                    desc: '現在の端末台数と理想の配置を組織図で視覚化。ギャップを一目で把握できます。',
+                  },
+                  {
+                    icon: '💰',
+                    title: '料金シミュレーター',
+                    desc: '追加必要台数と契約期間（1〜36ヶ月）に応じたレンタル料金をその場で試算。',
+                  },
+                  {
+                    icon: '🔒',
+                    title: 'MDM管理込みで安心',
+                    desc: '遠隔ロック・アプリ配信・セキュリティポリシーを一括設定。紛失リスクを最小化。',
+                  },
+                  {
+                    icon: '🚀',
+                    title: 'キッティング済みで即日稼働',
+                    desc: 'アプリ設定・MDM登録済みで到着。設定の手間ゼロで現場がすぐ使えます。',
+                  },
+                ].map((f) => (
+                  <div key={f.title} className="bg-white rounded-xl border border-gray-200 p-5">
+                    <span className="text-2xl">{f.icon}</span>
+                    <h4 className="text-sm font-semibold text-gray-800 mt-2">{f.title}</h4>
+                    <p className="text-xs text-gray-500 mt-1 leading-relaxed">{f.desc}</p>
                   </div>
-                  <div className="grid grid-cols-2 gap-3">
-                    {/* Current mock */}
-                    <div className="rounded-xl bg-slate-50 border border-slate-200 p-3">
-                      <div className="text-xs font-bold text-slate-500 mb-2">🔴 現状</div>
-                      <div className="flex items-center justify-center gap-1 py-2">
-                        <span className="text-2xl">🏢</span>
-                      </div>
-                      <div className="w-px h-4 bg-slate-300 mx-auto" />
-                      <div className="flex justify-center gap-2 mt-1">
-                        {['🏪','🏪','🏪'].map((s,i) => (
-                          <div key={i} className="text-center">
-                            <span className="text-lg">{s}</span>
-                            <div className="text-xs text-slate-400 mt-0.5">0台</div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-2 text-center text-xs font-bold text-red-500">端末不足</div>
-                    </div>
-                    {/* Ideal mock */}
-                    <div className="rounded-xl bg-blue-50 border border-blue-300 p-3">
-                      <div className="text-xs font-bold text-blue-500 mb-2">🔵 理想</div>
-                      <div className="flex items-center justify-center gap-1 py-2">
-                        <span className="text-2xl">🏢</span>
-                      </div>
-                      <div className="w-px h-4 bg-blue-300 mx-auto" />
-                      <div className="flex justify-center gap-2 mt-1">
-                        {['🏪','🏪','🏪'].map((s,i) => (
-                          <div key={i} className="text-center">
-                            <span className="text-lg">{s}</span>
-                            <div className="text-xs text-blue-500 mt-0.5">📱×3</div>
-                          </div>
-                        ))}
-                      </div>
-                      <div className="mt-2 text-center text-xs font-bold text-blue-600">MDM管理済み</div>
-                    </div>
-                  </div>
-                  {/* Gap badge mock */}
-                  <div className="bg-amber-50 border border-amber-200 rounded-xl p-2.5 text-center text-xs font-semibold text-amber-700">
-                    📦 あと9台追加で理想の運用が実現
-                  </div>
-                  {/* Price mock */}
-                  <div className="bg-slate-50 rounded-xl p-3 grid grid-cols-2 gap-2">
-                    {[['6ヶ月','¥62,820/月'],['12ヶ月','¥53,820/月']].map(([p,v]) => (
-                      <div key={p} className="text-center">
-                        <div className="text-xs text-slate-400">{p}</div>
-                        <div className="text-sm font-bold text-slate-700">{v}</div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
+                ))}
               </div>
             </div>
-            <p className="text-blue-300 text-xs text-center">
-              ※ 上記はイメージです。実際の診断結果はヒアリング内容に基づきます。
-            </p>
-          </div>
-        </div>
-      </div>
 
-      {/* Value props strip */}
-      <div className="bg-black/20 backdrop-blur border-t border-white/10">
-        <div className="max-w-[1800px] mx-auto px-10 py-6 grid grid-cols-4 gap-6 text-center">
-          {[
-            { emoji: '🚀', label: 'キッティング済み配送', sub: '届いた日から使える' },
-            { emoji: '🔒', label: 'MDM管理込み', sub: '遠隔ロック・アプリ配信' },
-            { emoji: '🛠️', label: '故障・代替機対応', sub: 'サポートも一括委託' },
-            { emoji: '📊', label: '料金シミュレーター付き', sub: '台数・期間を自由に試算' },
-          ].map((v) => (
-            <div key={v.label} className="space-y-1">
-              <div className="text-2xl">{v.emoji}</div>
-              <div className="text-sm font-semibold text-white">{v.label}</div>
-              <div className="text-xs text-blue-300">{v.sub}</div>
-            </div>
-          ))}
-        </div>
+          </div>
+        </main>
       </div>
     </div>
   )

@@ -35,10 +35,12 @@ export function ResultView() {
 
   if (!answers.operationStyle) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <div className="text-center space-y-4">
-          <p className="text-slate-500">ヒアリングが完了していません</p>
-          <Button onClick={() => router.push('/wizard?step=1')}>診断を始める</Button>
+          <p className="text-gray-500">ヒアリングが完了していません</p>
+          <Button onClick={() => { resetWizard(); router.push('/wizard?step=1') }}>
+            診断を始める
+          </Button>
         </div>
       </div>
     )
@@ -51,8 +53,12 @@ export function ResultView() {
     answers.staffPerLocation
   )
   const additionalDevices = Math.max(0, idealDeviceCount - answers.currentDeviceCount)
-  const devicesPerLocation = answers.locationCount > 0 ? Math.ceil(idealDeviceCount / answers.locationCount) : 0
-  const currentPerLocation = answers.locationCount > 0 ? Math.floor(answers.currentDeviceCount / answers.locationCount) : 0
+  const devicesPerLocation = answers.locationCount > 0
+    ? Math.ceil(idealDeviceCount / answers.locationCount)
+    : 0
+  const currentPerLocation = answers.locationCount > 0
+    ? Math.floor(answers.currentDeviceCount / answers.locationCount)
+    : 0
 
   const gapItems = buildGapItems({
     currentDeviceCount: answers.currentDeviceCount,
@@ -68,380 +74,363 @@ export function ResultView() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white">
-      {/* ===== HEADER ===== */}
-      <header className="bg-white border-b border-slate-200 sticky top-0 z-10 shadow-sm">
-        <div className="max-w-[1800px] mx-auto px-8 py-4 flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center text-white font-bold text-lg">
-              S
-            </div>
-            <div>
-              <div className="text-xs text-blue-600 font-semibold uppercase tracking-widest">
-                Studist Device Rental Service
-              </div>
-              <div className="text-lg font-bold text-slate-800 leading-tight">
-                デバイスプランニング 診断結果
-              </div>
-            </div>
-          </div>
-          <Button variant="outline" size="sm" onClick={handleReset}>
-            ← やり直す
-          </Button>
+    <div className="min-h-screen bg-gray-50 flex">
+      {/* Sidebar */}
+      <aside className="w-16 bg-gray-900 flex flex-col items-center py-5 gap-6 shrink-0 sticky top-0 h-screen">
+        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
+          <span className="text-white font-bold text-base">S</span>
         </div>
-      </header>
-
-      <div className="max-w-[1800px] mx-auto px-8 py-10 space-y-12">
-
-        {/* ===== HEARING SUMMARY ===== */}
-        <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
-          <h2 className="text-sm font-semibold uppercase tracking-widest text-slate-400 mb-5">
-            ヒアリング内容サマリー
-          </h2>
-          <div className="grid grid-cols-4 gap-6">
-            <div>
-              <p className="text-xs text-slate-400 mb-1.5">業種</p>
-              <p className="font-semibold text-slate-700">
-                {answers.isFranchise ? '🏪 FC事業' : '🏢 一般事業'}
-              </p>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1.5">業務の課題</p>
-              <div className="flex flex-wrap gap-1.5">
-                {answers.challenges.map((c) => (
-                  <span key={c} className="text-xs bg-slate-100 text-slate-600 px-2 py-0.5 rounded-full">
-                    {CHALLENGE_LABELS[c]}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1.5">活用シーン</p>
-              <div className="flex flex-wrap gap-1.5">
-                {answers.useCases.map((u) => (
-                  <span key={u} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded-full">
-                    {USE_CASE_LABELS[u]}
-                  </span>
-                ))}
-              </div>
-            </div>
-            <div>
-              <p className="text-xs text-slate-400 mb-1.5">運用スタイル</p>
-              <p className="font-semibold text-blue-700">
-                {styleMeta.emoji} {styleMeta.label}
-              </p>
-            </div>
+        {['🏠', '📋', '📊'].map((icon, i) => (
+          <div key={i} className={`w-10 h-10 rounded-lg flex items-center justify-center
+            ${i === 2 ? 'bg-blue-600' : 'text-gray-500 hover:bg-gray-800'} cursor-default`}>
+            <span className="text-base">{icon}</span>
           </div>
-        </section>
+        ))}
+        <div className="mt-auto w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 text-xs font-semibold">
+          U
+        </div>
+      </aside>
 
-        {/* ===== 2-COLUMN COMPARISON ===== */}
-        <section>
-          <h2 className="text-2xl font-bold text-slate-800 mb-6">
-            現状 vs 理想の運用比較
-          </h2>
-
-          <div className="grid grid-cols-2 gap-6">
-            {/* ---- CURRENT STATE ---- */}
-            <div className="bg-white rounded-3xl border-2 border-slate-200 overflow-hidden shadow-sm">
-              <div className="bg-slate-700 px-6 py-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-red-400 inline-block" />
-                  <h3 className="text-white font-bold text-lg">現状の運用</h3>
-                </div>
-                <p className="text-slate-300 text-sm mt-0.5">
-                  端末 {answers.currentDeviceCount}台 ／ {answers.locationCount}拠点 ／ スタッフ約{answers.locationCount * answers.staffPerLocation}名
-                </p>
-              </div>
-              <div className="p-6 space-y-6">
-                {/* Org chart */}
-                <div className="flex justify-center py-4 bg-slate-50 rounded-2xl">
-                  <OrgChart
-                    locationCount={answers.locationCount}
-                    devicesPerLocation={currentPerLocation}
-                    totalDevices={answers.currentDeviceCount}
-                    label="現状"
-                    variant="current"
-                  />
-                </div>
-
-                {/* Current state issues */}
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-slate-600">現状の課題</p>
-                  {answers.currentDeviceCount === 0 ? (
-                    <div className="space-y-2">
-                      <IssueItem level="high" text="業務でモバイル端末が使えず、紙・口頭に依存" />
-                      <IssueItem level="high" text="マニュアルを現場でリアルタイム参照できない" />
-                      <IssueItem level="high" text="スタッフ教育に時間・人手がかかる" />
-                    </div>
-                  ) : idealDeviceCount > answers.currentDeviceCount ? (
-                    <div className="space-y-2">
-                      <IssueItem
-                        level="high"
-                        text={`端末が${additionalDevices}台不足（充足率 ${Math.round((answers.currentDeviceCount / idealDeviceCount) * 100)}%）`}
-                      />
-                      <IssueItem level="medium" text="端末の取り合いや待ち時間が発生している" />
-                      <IssueItem level="medium" text="全員が同時にマニュアルを参照できない" />
-                      {answers.locationCount > 1 && (
-                        <IssueItem level="medium" text="拠点によって端末環境にばらつきがある" />
-                      )}
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <IssueItem level="ok" text="端末台数は目標を達成しています" />
-                      <IssueItem level="medium" text="MDM管理・セキュリティの整備が課題" />
-                    </div>
-                  )}
-                </div>
-
-                {/* Metrics */}
-                <div className="grid grid-cols-3 gap-3">
-                  <MetricCard label="端末台数" value={`${answers.currentDeviceCount}台`} sub="現在" color="slate" />
-                  <MetricCard label="1拠点あたり" value={`${currentPerLocation}台`} sub="平均" color="slate" />
-                  <MetricCard
-                    label="充足率"
-                    value={idealDeviceCount > 0 ? `${Math.round((answers.currentDeviceCount / idealDeviceCount) * 100)}%` : '—'}
-                    sub="目標比"
-                    color={answers.currentDeviceCount >= idealDeviceCount ? 'green' : 'red'}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {/* ---- IDEAL STATE ---- */}
-            <div className="bg-white rounded-3xl border-2 border-blue-400 overflow-hidden shadow-lg">
-              <div className="bg-blue-600 px-6 py-4">
-                <div className="flex items-center gap-2">
-                  <span className="w-3 h-3 rounded-full bg-blue-200 inline-block" />
-                  <h3 className="text-white font-bold text-lg">理想の運用</h3>
-                  <span className="ml-auto text-xs bg-blue-500 text-blue-100 font-semibold px-2.5 py-1 rounded-full">
-                    {styleMeta.emoji} {styleMeta.label}
-                  </span>
-                </div>
-                <p className="text-blue-200 text-sm mt-0.5">
-                  端末 {idealDeviceCount}台 ／ {answers.locationCount}拠点 ／ MDM一元管理
-                </p>
-              </div>
-              <div className="p-6 space-y-6">
-                {/* Org chart */}
-                <div className="flex justify-center py-4 bg-blue-50 rounded-2xl">
-                  <OrgChart
-                    locationCount={answers.locationCount}
-                    devicesPerLocation={devicesPerLocation}
-                    totalDevices={idealDeviceCount}
-                    label="理想"
-                    variant="ideal"
-                  />
-                </div>
-
-                {/* Ideal benefits */}
-                <div className="space-y-3">
-                  <p className="text-sm font-semibold text-slate-600">理想の状態</p>
-                  <div className="space-y-2">
-                    {styleMeta.pros.map((p) => (
-                      <div key={p} className="flex items-start gap-2 text-sm text-slate-600">
-                        <span className="text-blue-500 shrink-0 mt-0.5">✓</span>
-                        {p}
-                      </div>
-                    ))}
-                    <div className="flex items-start gap-2 text-sm text-slate-600">
-                      <span className="text-blue-500 shrink-0 mt-0.5">✓</span>
-                      全{answers.locationCount}拠点でMDMによる一元管理・セキュリティ対策
-                    </div>
-                    <div className="flex items-start gap-2 text-sm text-slate-600">
-                      <span className="text-blue-500 shrink-0 mt-0.5">✓</span>
-                      Teachme Bizでデジタルマニュアルを現場でリアルタイム参照
-                    </div>
-                  </div>
-                </div>
-
-                {/* Metrics */}
-                <div className="grid grid-cols-3 gap-3">
-                  <MetricCard label="端末台数" value={`${idealDeviceCount}台`} sub="目標" color="blue" />
-                  <MetricCard label="1拠点あたり" value={`${devicesPerLocation}台`} sub="均等配置" color="blue" />
-                  <MetricCard label="充足率" value="100%" sub="完全対応" color="green" />
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Gap badge */}
-          {additionalDevices > 0 && (
-            <div className="mt-6 flex justify-center">
-              <div className="bg-amber-50 border-2 border-amber-300 rounded-2xl px-8 py-4 flex items-center gap-4">
-                <span className="text-3xl">📦</span>
-                <div>
-                  <p className="font-bold text-amber-800 text-lg">
-                    あと <span className="text-2xl text-amber-600">{additionalDevices}台</span> 追加することで理想の運用が実現
-                  </p>
-                  <p className="text-amber-600 text-sm">
-                    DRSデバイスレンタルサービスで必要な台数だけ・必要な期間だけレンタル可能
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </section>
-
-        {/* ===== GAP ANALYSIS TABLE ===== */}
-        <section>
-          <h2 className="text-2xl font-bold text-slate-800 mb-4">
-            現状と理想のギャップ分析
-          </h2>
-          <GapAnalysis items={gapItems} />
-        </section>
-
-        {/* ===== DRS PRICING ===== */}
-        {additionalDevices > 0 && (
-          <section className="bg-white rounded-3xl border border-slate-200 shadow-sm p-8">
-            <div className="flex items-center gap-3 mb-6">
-              <span className="text-3xl">💰</span>
-              <div>
-                <h2 className="text-2xl font-bold text-slate-800">
-                  DRS デバイスレンタルサービスで解決する
-                </h2>
-                <p className="text-slate-500 text-sm mt-0.5">
-                  追加{additionalDevices}台をレンタルすることで、理想の運用環境が整います
-                </p>
-              </div>
-            </div>
-            <DRSPricing additionalDevices={additionalDevices} />
-          </section>
-        )}
-
-        {/* ===== TEACHME UPSELL ===== */}
-        <section className="bg-gradient-to-r from-orange-50 via-amber-50 to-yellow-50 rounded-3xl border border-orange-200 p-8">
-          <div className="grid grid-cols-2 gap-8 items-center">
-            <div>
-              <div className="text-sm font-semibold text-orange-500 uppercase tracking-widest mb-2">
-                合わせてご提案
-              </div>
-              <h2 className="text-2xl font-bold text-slate-800">
-                Teachme Biz とのセット導入
-              </h2>
-              <p className="text-slate-600 mt-3 leading-relaxed">
-                デバイスが揃っても、マニュアルのデジタル化が伴わなければ効果は半減します。
-                <strong>Teachme Biz</strong> は現場スタッフが使いやすい動画・テキスト混合のマニュアル共有SaaSです。
-                DRSとのセット導入で、端末準備から教育・標準化まで一気通貫で解決できます。
-              </p>
-              <div className="mt-4 grid grid-cols-2 gap-2">
-                {[
-                  '現場でスマホからマニュアル即参照',
-                  '動画・画像・テキストを組み合わせ',
-                  '習得度テスト・進捗管理',
-                  '多言語対応（外国人スタッフにも）',
-                  'FC本部からの一括配信・管理',
-                  'マニュアル更新を即座に全店へ反映',
-                ].map((f) => (
-                  <div key={f} className="flex items-start gap-1.5 text-sm text-slate-600">
-                    <span className="text-orange-500 shrink-0 mt-0.5">✓</span>
-                    {f}
-                  </div>
-                ))}
-              </div>
-            </div>
-            <div className="bg-white rounded-2xl p-6 shadow-sm border border-orange-100">
-              <p className="text-sm font-semibold text-slate-500 mb-4">セット導入イメージ</p>
-              <div className="space-y-3">
-                {[
-                  { step: '1', label: 'DRS', desc: 'キッティング済み端末が届く', icon: '📱' },
-                  { step: '2', label: 'Teachme Biz', desc: 'マニュアルをデジタル化・共有', icon: '📚' },
-                  { step: '3', label: 'MDM', desc: '全端末を本部から一元管理', icon: '🔒' },
-                  { step: '4', label: '運用開始', desc: '現場がすぐに使い始められる', icon: '🚀' },
-                ].map((s) => (
-                  <div key={s.step} className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-full bg-orange-100 text-orange-600 font-bold text-sm flex items-center justify-center shrink-0">
-                      {s.step}
-                    </div>
-                    <span className="text-lg shrink-0">{s.icon}</span>
-                    <div>
-                      <span className="font-semibold text-slate-700 text-sm">{s.label}</span>
-                      <span className="text-slate-400 text-xs ml-2">{s.desc}</span>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ===== CTA ===== */}
-        <section className="bg-blue-600 rounded-3xl p-10 text-white text-center space-y-6">
-          <div>
-            <h2 className="text-3xl font-bold">次のステップへ</h2>
-            <p className="text-blue-200 mt-2 text-lg">
-              担当者が詳細なプランを無料でご提案します
-            </p>
-          </div>
-          <div className="grid grid-cols-3 gap-4 max-w-2xl mx-auto">
-            {[
-              { icon: '📧', label: 'メールで資料請求', desc: 'この診断結果をもとにカスタマイズ提案書をお送りします' },
-              { icon: '💬', label: 'オンライン相談（無料）', desc: '30分で要件整理・最適プランをご提案します' },
-              { icon: '🧪', label: 'トライアルから始める', desc: '14泊のお試しパックで実際に体験できます' },
-            ].map((c) => (
-              <div key={c.label} className="bg-white/10 backdrop-blur rounded-2xl p-4">
-                <div className="text-2xl mb-2">{c.icon}</div>
-                <div className="font-semibold text-sm">{c.label}</div>
-                <div className="text-xs text-blue-200 mt-1">{c.desc}</div>
-              </div>
-            ))}
-          </div>
-          <p className="text-blue-300 text-sm">
-            ※ ご連絡は通常2営業日以内に差し上げます
-          </p>
-        </section>
-
-        <div className="text-center pb-8">
+      {/* Main */}
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Top bar */}
+        <header className="bg-white border-b border-gray-200 h-14 flex items-center px-8 gap-4 sticky top-0 z-10">
           <button
             onClick={handleReset}
-            className="text-sm text-slate-400 hover:text-slate-600 underline"
+            className="flex items-center gap-1.5 text-sm text-gray-500 hover:text-gray-800 transition-colors"
           >
-            最初からやり直す
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
+            トップへ
           </button>
-        </div>
+          <div className="w-px h-4 bg-gray-200" />
+          <h1 className="text-sm font-semibold text-gray-700">診断結果</h1>
+          <div className="ml-auto flex items-center gap-3">
+            <Button variant="outline" size="sm" onClick={handleReset}>
+              やり直す
+            </Button>
+          </div>
+        </header>
+
+        <main className="flex-1 p-8">
+          <div className="max-w-[1600px] mx-auto space-y-8">
+
+            {/* ===== HEARING SUMMARY ===== */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50 flex items-center gap-2">
+                <span className="text-xs font-semibold text-gray-500 uppercase tracking-widest">
+                  ヒアリング内容サマリー
+                </span>
+              </div>
+              <div className="px-6 py-4 grid grid-cols-4 gap-6 divide-x divide-gray-100">
+                <div className="pr-6">
+                  <p className="text-xs text-gray-400 mb-1.5">業種・事業形態</p>
+                  <p className="text-sm font-medium text-gray-700">
+                    {answers.isFranchise ? 'FC事業' : '一般事業'}
+                  </p>
+                </div>
+                <div className="pl-6 pr-6">
+                  <p className="text-xs text-gray-400 mb-1.5">業務の課題</p>
+                  <div className="flex flex-wrap gap-1">
+                    {answers.challenges.map((c) => (
+                      <span key={c} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded">
+                        {CHALLENGE_LABELS[c]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="pl-6 pr-6">
+                  <p className="text-xs text-gray-400 mb-1.5">活用シーン</p>
+                  <div className="flex flex-wrap gap-1">
+                    {answers.useCases.map((u) => (
+                      <span key={u} className="text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded">
+                        {USE_CASE_LABELS[u]}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <div className="pl-6">
+                  <p className="text-xs text-gray-400 mb-1.5">選択した運用スタイル</p>
+                  <p className="text-sm font-medium text-blue-600">
+                    {styleMeta.emoji} {styleMeta.label}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            {/* ===== 2-COLUMN COMPARISON ===== */}
+            <div>
+              <h2 className="text-base font-semibold text-gray-700 mb-4">現状 vs 理想の運用比較</h2>
+              <div className="grid grid-cols-2 gap-6">
+
+                {/* Current */}
+                <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                  <div className="px-5 py-3 border-b border-gray-100 bg-gray-50 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-red-400 inline-block" />
+                      <span className="text-sm font-semibold text-gray-700">現状の運用</span>
+                    </div>
+                    <span className="text-xs text-gray-400">
+                      {answers.currentDeviceCount}台 / {answers.locationCount}拠点
+                    </span>
+                  </div>
+                  <div className="p-5 space-y-5">
+                    {/* Org chart */}
+                    <div className="flex justify-center py-5 bg-gray-50 rounded-lg">
+                      <OrgChart
+                        locationCount={answers.locationCount}
+                        devicesPerLocation={currentPerLocation}
+                        totalDevices={answers.currentDeviceCount}
+                        label="現状"
+                        variant="current"
+                      />
+                    </div>
+
+                    {/* Issues */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">現状の課題</p>
+                      {answers.currentDeviceCount === 0 ? (
+                        <>
+                          <IssueRow level="high" text="業務でモバイル端末が使えず、紙・口頭に依存" />
+                          <IssueRow level="high" text="マニュアルを現場でリアルタイム参照できない" />
+                          <IssueRow level="high" text="スタッフ教育に時間・人手がかかる" />
+                        </>
+                      ) : idealDeviceCount > answers.currentDeviceCount ? (
+                        <>
+                          <IssueRow level="high" text={`端末が${additionalDevices}台不足（充足率 ${Math.round((answers.currentDeviceCount / idealDeviceCount) * 100)}%）`} />
+                          <IssueRow level="medium" text="端末の取り合いや待ち時間が発生している" />
+                          <IssueRow level="medium" text="全員が同時にマニュアルを参照できない" />
+                        </>
+                      ) : (
+                        <>
+                          <IssueRow level="ok" text="端末台数は目標を達成しています" />
+                          <IssueRow level="medium" text="MDM管理・セキュリティの整備が課題" />
+                        </>
+                      )}
+                    </div>
+
+                    {/* Metrics */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <MetricCell label="端末台数" value={`${answers.currentDeviceCount}台`} />
+                      <MetricCell label="1拠点あたり" value={`${currentPerLocation}台`} />
+                      <MetricCell
+                        label="充足率"
+                        value={idealDeviceCount > 0 ? `${Math.round((answers.currentDeviceCount / idealDeviceCount) * 100)}%` : '—'}
+                        highlight={answers.currentDeviceCount >= idealDeviceCount ? 'green' : 'red'}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Ideal */}
+                <div className="bg-white rounded-xl border border-blue-300 overflow-hidden">
+                  <div className="px-5 py-3 border-b border-blue-100 bg-blue-50 flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <span className="w-2 h-2 rounded-full bg-blue-500 inline-block" />
+                      <span className="text-sm font-semibold text-gray-700">理想の運用</span>
+                      <span className="text-xs bg-blue-100 text-blue-600 font-semibold px-2 py-0.5 rounded ml-1">
+                        {styleMeta.label}
+                      </span>
+                    </div>
+                    <span className="text-xs text-blue-500">
+                      {idealDeviceCount}台 / {answers.locationCount}拠点 / MDM管理
+                    </span>
+                  </div>
+                  <div className="p-5 space-y-5">
+                    {/* Org chart */}
+                    <div className="flex justify-center py-5 bg-blue-50 rounded-lg">
+                      <OrgChart
+                        locationCount={answers.locationCount}
+                        devicesPerLocation={devicesPerLocation}
+                        totalDevices={idealDeviceCount}
+                        label="理想"
+                        variant="ideal"
+                      />
+                    </div>
+
+                    {/* Benefits */}
+                    <div className="space-y-2">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide">理想の状態</p>
+                      {[...styleMeta.pros,
+                        `全${answers.locationCount}拠点でMDMによる一元管理`,
+                        'Teachme Bizでデジタルマニュアルをリアルタイム参照',
+                      ].map((p) => (
+                        <div key={p} className="flex items-start gap-2 text-sm text-gray-600">
+                          <span className="text-green-500 shrink-0 mt-0.5 text-xs">✓</span>
+                          {p}
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Metrics */}
+                    <div className="grid grid-cols-3 gap-2">
+                      <MetricCell label="端末台数" value={`${idealDeviceCount}台`} highlight="blue" />
+                      <MetricCell label="1拠点あたり" value={`${devicesPerLocation}台`} highlight="blue" />
+                      <MetricCell label="充足率" value="100%" highlight="green" />
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Gap callout */}
+              {additionalDevices > 0 && (
+                <div className="mt-4 bg-amber-50 border border-amber-200 rounded-lg px-5 py-3 flex items-center gap-3">
+                  <span className="text-amber-500 text-lg shrink-0">⚠</span>
+                  <p className="text-sm text-amber-800">
+                    あと <span className="font-bold">{additionalDevices}台</span> 追加することで理想の運用環境が実現します。
+                    DRSデバイスレンタルサービスで必要な台数だけ・必要な期間だけレンタル可能です。
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* ===== GAP ANALYSIS ===== */}
+            <div>
+              <h2 className="text-base font-semibold text-gray-700 mb-4">現状と理想のギャップ分析</h2>
+              <GapAnalysis items={gapItems} />
+            </div>
+
+            {/* ===== DRS PRICING ===== */}
+            {additionalDevices > 0 && (
+              <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+                <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                  <h2 className="text-sm font-semibold text-gray-700">
+                    DRS デバイスレンタルサービスで解決する
+                  </h2>
+                  <p className="text-xs text-gray-400 mt-0.5">
+                    追加 {additionalDevices}台 のレンタルで理想の運用環境が整います
+                  </p>
+                </div>
+                <div className="p-6">
+                  <DRSPricing additionalDevices={additionalDevices} />
+                </div>
+              </div>
+            )}
+
+            {/* ===== TEACHME UPSELL ===== */}
+            <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
+              <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
+                <h2 className="text-sm font-semibold text-gray-700">合わせてご提案：Teachme Biz</h2>
+              </div>
+              <div className="p-6 grid grid-cols-2 gap-8 items-start">
+                <div>
+                  <p className="text-sm text-gray-600 leading-relaxed">
+                    デバイスが揃っても、マニュアルのデジタル化が伴わなければ効果は半減します。
+                    <strong className="text-gray-800">Teachme Biz</strong> は現場スタッフが使いやすい動画・テキスト混合のマニュアル共有SaaSです。
+                    DRSとのセット導入で、端末準備から教育・標準化まで一気通貫で解決できます。
+                  </p>
+                  <ul className="mt-4 space-y-1.5">
+                    {[
+                      '現場でスマホからマニュアル即参照',
+                      '動画・画像・テキストを組み合わせてリッチなコンテンツ作成',
+                      '習得度テスト・進捗管理で教育効果を可視化',
+                      'FC本部からの一括配信・全店舗への即時反映',
+                      '多言語対応（外国人スタッフへの展開も容易）',
+                    ].map((f) => (
+                      <li key={f} className="flex items-start gap-2 text-sm text-gray-600">
+                        <span className="text-green-500 shrink-0 mt-0.5 text-xs">✓</span>
+                        {f}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+                <div className="space-y-2">
+                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">セット導入の流れ</p>
+                  {[
+                    { n: '1', label: 'DRS', desc: 'キッティング済み端末が届く' },
+                    { n: '2', label: 'Teachme Biz', desc: 'マニュアルをデジタル化・共有' },
+                    { n: '3', label: 'MDM', desc: '全端末を本部から一元管理' },
+                    { n: '4', label: '運用開始', desc: '現場がすぐに使い始められる' },
+                  ].map((s) => (
+                    <div key={s.n} className="flex items-center gap-3 py-2 border-b border-gray-50 last:border-0">
+                      <div className="w-6 h-6 rounded-full bg-blue-100 text-blue-600 font-bold text-xs flex items-center justify-center shrink-0">
+                        {s.n}
+                      </div>
+                      <div>
+                        <span className="text-sm font-medium text-gray-800">{s.label}</span>
+                        <span className="text-xs text-gray-400 ml-2">{s.desc}</span>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* ===== CTA ===== */}
+            <div className="bg-blue-600 rounded-xl p-8 text-white">
+              <div className="grid grid-cols-3 gap-6 items-start">
+                <div className="col-span-1">
+                  <h2 className="text-lg font-bold">次のステップへ</h2>
+                  <p className="text-blue-200 text-sm mt-1">
+                    担当者が詳細なプランを無料でご提案します。通常2営業日以内にご連絡します。
+                  </p>
+                </div>
+                <div className="col-span-2 grid grid-cols-3 gap-3">
+                  {[
+                    { icon: '📧', label: 'メールで資料請求', desc: 'この診断結果をもとにカスタマイズした提案書をお送りします' },
+                    { icon: '💬', label: 'オンライン相談（無料）', desc: '30分で要件整理・最適プランをご提案します' },
+                    { icon: '🧪', label: 'トライアルから始める', desc: '14泊のお試しパックで実際に体験できます' },
+                  ].map((c) => (
+                    <div key={c.label} className="bg-white/10 rounded-lg p-4">
+                      <div className="text-xl mb-2">{c.icon}</div>
+                      <div className="text-sm font-semibold">{c.label}</div>
+                      <div className="text-xs text-blue-200 mt-1">{c.desc}</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            <div className="text-center pb-4">
+              <button onClick={handleReset} className="text-xs text-gray-400 hover:text-gray-600 underline">
+                最初からやり直す
+              </button>
+            </div>
+          </div>
+        </main>
       </div>
     </div>
   )
 }
 
-// ---- Helper components ----
+// ---- Helpers ----
 
-function IssueItem({ level, text }: { level: 'high' | 'medium' | 'ok'; text: string }) {
-  const config = {
-    high: { bg: 'bg-red-50', border: 'border-red-200', icon: '🔴', text: 'text-red-700' },
-    medium: { bg: 'bg-amber-50', border: 'border-amber-200', icon: '🟡', text: 'text-amber-700' },
-    ok: { bg: 'bg-green-50', border: 'border-green-200', icon: '🟢', text: 'text-green-700' },
+function IssueRow({ level, text }: { level: 'high' | 'medium' | 'ok'; text: string }) {
+  const cfg = {
+    high:   { dot: 'bg-red-400',   text: 'text-gray-700' },
+    medium: { dot: 'bg-amber-400', text: 'text-gray-600' },
+    ok:     { dot: 'bg-green-400', text: 'text-gray-600' },
   }[level]
 
   return (
-    <div className={`flex items-start gap-2 text-sm px-3 py-2 rounded-xl border ${config.bg} ${config.border}`}>
-      <span className="shrink-0 text-sm">{config.icon}</span>
-      <span className={config.text}>{text}</span>
+    <div className="flex items-start gap-2 text-sm">
+      <span className={`w-1.5 h-1.5 rounded-full ${cfg.dot} shrink-0 mt-1.5`} />
+      <span className={cfg.text}>{text}</span>
     </div>
   )
 }
 
-function MetricCard({
+function MetricCell({
   label,
   value,
-  sub,
-  color,
+  highlight,
 }: {
   label: string
   value: string
-  sub: string
-  color: 'slate' | 'blue' | 'green' | 'red'
+  highlight?: 'blue' | 'green' | 'red'
 }) {
   const colors = {
-    slate: 'text-slate-700',
     blue: 'text-blue-600',
     green: 'text-green-600',
     red: 'text-red-500',
   }
   return (
-    <div className="bg-slate-50 rounded-xl p-3 text-center">
-      <p className="text-xs text-slate-400 mb-1">{label}</p>
-      <p className={`text-xl font-bold ${colors[color]}`}>{value}</p>
-      <p className="text-xs text-slate-400 mt-0.5">{sub}</p>
+    <div className="bg-gray-50 rounded-lg p-3 text-center border border-gray-100">
+      <p className="text-xs text-gray-400 mb-1">{label}</p>
+      <p className={`text-lg font-bold ${highlight ? colors[highlight] : 'text-gray-700'}`}>
+        {value}
+      </p>
     </div>
   )
 }

@@ -7,7 +7,7 @@ import { ChoiceCard } from '@/src/components/ui/ChoiceCard'
 import { Button } from '@/src/components/ui/Button'
 
 const INDUSTRIES: { key: Industry; emoji: string; label: string; description: string }[] = [
-  { key: 'food_service', emoji: '🍽️', label: '飲食・フードサービス', description: 'レストラン、カフェ、ファストフード、居酒屋など' },
+  { key: 'food_service', emoji: '🍽️', label: '飲食・フードサービス', description: 'レストラン、カフェ、ファストフードなど' },
   { key: 'retail', emoji: '🛍️', label: '小売・流通', description: 'コンビニ、スーパー、アパレル、専門店など' },
   { key: 'manufacturing', emoji: '🏭', label: '製造・工場', description: '製造ライン、品質管理、倉庫作業など' },
   { key: 'logistics', emoji: '📦', label: '物流・配送', description: '配送センター、倉庫管理、ドライバーなど' },
@@ -21,14 +21,6 @@ export function Step01Industry() {
   const router = useRouter()
   const { answers, updateAnswers, nextStep } = useWizardStore()
 
-  function handleSelectIndustry(key: Industry) {
-    updateAnswers({ industry: key })
-  }
-
-  function handleFranchise(value: boolean) {
-    updateAnswers({ isFranchise: value })
-  }
-
   function handleNext() {
     nextStep()
     router.push('/wizard?step=2')
@@ -39,16 +31,17 @@ export function Step01Industry() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-slate-800">業種をお教えください</h1>
-        <p className="mt-1 text-slate-500 text-sm">最も近い業種を選択してください</p>
+        <p className="text-xs font-semibold text-blue-600 uppercase tracking-widest mb-1">Step 1</p>
+        <h1 className="text-xl font-semibold text-gray-800">業種をお教えください</h1>
+        <p className="mt-1 text-sm text-gray-500">最も近い業種を選択してください</p>
       </div>
 
-      <div className="grid grid-cols-1 gap-3">
+      <div className="space-y-2">
         {INDUSTRIES.map((item) => (
           <ChoiceCard
             key={item.key}
             selected={answers.industry === item.key}
-            onClick={() => handleSelectIndustry(item.key)}
+            onClick={() => updateAnswers({ industry: item.key })}
             emoji={item.emoji}
             label={item.label}
             description={item.description}
@@ -57,20 +50,18 @@ export function Step01Industry() {
       </div>
 
       {answers.industry && (
-        <div className="space-y-3 pt-2 border-t border-slate-200">
-          <p className="font-semibold text-slate-700">フランチャイズ（FC）事業ですか？</p>
-          <div className="grid grid-cols-2 gap-3">
+        <div className="space-y-2 pt-4 border-t border-gray-100">
+          <p className="text-sm font-medium text-gray-700">フランチャイズ（FC）事業ですか？</p>
+          <div className="grid grid-cols-2 gap-2">
             <ChoiceCard
               selected={answers.isFranchise === true}
-              onClick={() => handleFranchise(true)}
-              emoji="🏪"
+              onClick={() => updateAnswers({ isFranchise: true })}
               label="はい（FC事業）"
               description="本部・加盟店がある"
             />
             <ChoiceCard
               selected={answers.isFranchise === false}
-              onClick={() => handleFranchise(false)}
-              emoji="🏠"
+              onClick={() => updateAnswers({ isFranchise: false })}
               label="いいえ"
               description="独立した事業"
             />
@@ -79,13 +70,8 @@ export function Step01Industry() {
       )}
 
       <div className="pt-2">
-        <Button
-          size="lg"
-          className="w-full"
-          onClick={handleNext}
-          disabled={!canProceed}
-        >
-          次へ →
+        <Button size="lg" className="w-full" onClick={handleNext} disabled={!canProceed}>
+          次へ
         </Button>
       </div>
     </div>
