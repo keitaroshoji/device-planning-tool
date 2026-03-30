@@ -1,30 +1,10 @@
 import Link from 'next/link'
+import { AppSidebar } from '@/src/components/ui/AppSidebar'
 
 export default function Home() {
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* ===== LEFT SIDEBAR (dark — Teachme style) ===== */}
-      <aside className="w-16 bg-gray-900 flex flex-col items-center py-5 gap-6 shrink-0">
-        {/* Logo */}
-        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-          <span className="text-white font-bold text-base">S</span>
-        </div>
-        {/* Decorative nav dots */}
-        {['🏠', '📋', '📊', '⚙️'].map((icon, i) => (
-          <div
-            key={i}
-            className={`w-10 h-10 rounded-lg flex items-center justify-center text-lg
-              ${i === 0 ? 'bg-blue-600 text-white' : 'text-gray-500 hover:text-gray-300 hover:bg-gray-800'}
-              cursor-default`}
-          >
-            <span className="text-base">{icon}</span>
-          </div>
-        ))}
-        {/* Bottom */}
-        <div className="mt-auto w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 text-xs font-semibold">
-          U
-        </div>
-      </aside>
+      <AppSidebar activePage="home" />
 
       {/* ===== MAIN AREA ===== */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -32,7 +12,7 @@ export default function Home() {
         <header className="bg-white border-b border-gray-200 h-14 flex items-center px-8 gap-4">
           <h1 className="text-sm font-semibold text-gray-700">デバイスプランニング</h1>
           <div className="w-px h-4 bg-gray-200" />
-          <span className="text-sm text-gray-400">Studist デバイスレンタルサービス</span>
+          <span className="text-sm text-gray-400">Studist デバイスサービス</span>
           <div className="ml-auto">
             <Link
               href="/wizard?step=1"

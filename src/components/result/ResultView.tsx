@@ -10,6 +10,7 @@ import { OrgChart } from './OrgChart'
 import { GapAnalysis, buildGapItems } from './GapAnalysis'
 import { DRSPricing } from './DRSPricing'
 import { Button } from '@/src/components/ui/Button'
+import { AppSidebar } from '@/src/components/ui/AppSidebar'
 
 const CHALLENGE_LABELS: Record<string, string> = {
   manual_creation: 'マニュアル整備',
@@ -75,21 +76,7 @@ export function ResultView() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex">
-      {/* Sidebar */}
-      <aside className="w-16 bg-gray-900 flex flex-col items-center py-5 gap-6 shrink-0 sticky top-0 h-screen">
-        <div className="w-9 h-9 rounded-lg bg-blue-600 flex items-center justify-center">
-          <span className="text-white font-bold text-base">S</span>
-        </div>
-        {['🏠', '📋', '📊'].map((icon, i) => (
-          <div key={i} className={`w-10 h-10 rounded-lg flex items-center justify-center
-            ${i === 2 ? 'bg-blue-600' : 'text-gray-500 hover:bg-gray-800'} cursor-default`}>
-            <span className="text-base">{icon}</span>
-          </div>
-        ))}
-        <div className="mt-auto w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-gray-300 text-xs font-semibold">
-          U
-        </div>
-      </aside>
+      <AppSidebar activePage="result" />
 
       {/* Main */}
       <div className="flex-1 flex flex-col min-w-0">
@@ -279,7 +266,7 @@ export function ResultView() {
                   <span className="text-amber-500 text-lg shrink-0">⚠</span>
                   <p className="text-sm text-amber-800">
                     あと <span className="font-bold">{additionalDevices}台</span> 追加することで理想の運用環境が実現します。
-                    DRSデバイスレンタルサービスで必要な台数だけ・必要な期間だけレンタル可能です。
+                    DRSデバイスサービスで必要な台数だけ・必要な期間だけレンタル可能です。
                   </p>
                 </div>
               )}
@@ -296,7 +283,7 @@ export function ResultView() {
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
                   <h2 className="text-sm font-semibold text-gray-700">
-                    DRS デバイスレンタルサービスで解決する
+                    DRS デバイスサービスで解決する
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
                     追加 {additionalDevices}台 のレンタルで理想の運用環境が整います

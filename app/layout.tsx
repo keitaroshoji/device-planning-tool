@@ -8,9 +8,9 @@ const geist = Geist({
 })
 
 export const metadata: Metadata = {
-  title: 'デバイスプランニング | Studist DRS',
+  title: 'デバイスプランニング | Studist デバイスサービス',
   description:
-    'ヒアリングを通じて、貴社に最適なデバイスレンタルプランをご提案します。',
+    'ヒアリングを通じて、貴社に最適なデバイスサービスプランをご提案します。',
 }
 
 export default function RootLayout({
