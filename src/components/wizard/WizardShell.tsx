@@ -59,7 +59,7 @@ export function WizardShell() {
             <div className="w-6 h-6 rounded bg-blue-600 flex items-center justify-center">
               <span className="text-white text-xs font-bold">S</span>
             </div>
-            <span className="text-sm font-semibold text-gray-700">Studist DRS</span>
+            <span className="text-sm font-semibold text-gray-700">Studist DS</span>
           </div>
 
           <div className="w-px h-5 bg-gray-200 mx-1" />

@@ -8,7 +8,7 @@ import {
 } from '@/src/lib/operation-style'
 import { OrgChart } from './OrgChart'
 import { GapAnalysis, buildGapItems } from './GapAnalysis'
-import { DRSPricing } from './DRSPricing'
+import { DSPricing } from './DSPricing'
 import { Button } from '@/src/components/ui/Button'
 import { AppSidebar } from '@/src/components/ui/AppSidebar'
 
@@ -266,7 +266,7 @@ export function ResultView() {
                   <span className="text-amber-500 text-lg shrink-0">⚠</span>
                   <p className="text-sm text-amber-800">
                     あと <span className="font-bold">{additionalDevices}台</span> 追加することで理想の運用環境が実現します。
-                    DRSデバイスサービスで必要な台数だけ・必要な期間だけレンタル可能です。
+                    DSデバイスサービスで必要な台数だけ・必要な期間だけレンタル可能です。
                   </p>
                 </div>
               )}
@@ -278,19 +278,19 @@ export function ResultView() {
               <GapAnalysis items={gapItems} />
             </div>
 
-            {/* ===== DRS PRICING ===== */}
+            {/* ===== DS PRICING ===== */}
             {additionalDevices > 0 && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
                   <h2 className="text-sm font-semibold text-gray-700">
-                    DRS デバイスサービスで解決する
+                    DS デバイスサービスで解決する
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
                     追加 {additionalDevices}台 のレンタルで理想の運用環境が整います
                   </p>
                 </div>
                 <div className="p-6">
-                  <DRSPricing additionalDevices={additionalDevices} />
+                  <DSPricing additionalDevices={additionalDevices} />
                 </div>
               </div>
             )}
@@ -305,7 +305,7 @@ export function ResultView() {
                   <p className="text-sm text-gray-600 leading-relaxed">
                     デバイスが揃っても、マニュアルのデジタル化が伴わなければ効果は半減します。
                     <strong className="text-gray-800">Teachme Biz</strong> は現場スタッフが使いやすい動画・テキスト混合のマニュアル共有SaaSです。
-                    DRSとのセット導入で、端末準備から教育・標準化まで一気通貫で解決できます。
+                    DSとのセット導入で、端末準備から教育・標準化まで一気通貫で解決できます。
                   </p>
                   <ul className="mt-4 space-y-1.5">
                     {[
@@ -325,7 +325,7 @@ export function ResultView() {
                 <div className="space-y-2">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">セット導入の流れ</p>
                   {[
-                    { n: '1', label: 'DRS', desc: 'キッティング済み端末が届く' },
+                    { n: '1', label: 'DS', desc: 'キッティング済み端末が届く' },
                     { n: '2', label: 'Teachme Biz', desc: 'マニュアルをデジタル化・共有' },
                     { n: '3', label: 'MDM', desc: '全端末を本部から一元管理' },
                     { n: '4', label: '運用開始', desc: '現場がすぐに使い始められる' },

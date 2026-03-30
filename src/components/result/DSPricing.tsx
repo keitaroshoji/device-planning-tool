@@ -2,7 +2,7 @@
 
 import { useSettingsStore } from '@/src/store/settingsStore'
 
-interface DRSPricingProps {
+interface DSPricingProps {
   additionalDevices: number
 }
 
@@ -17,7 +17,7 @@ function fmt(n: number) {
   return `¥${n.toLocaleString('ja-JP')}`
 }
 
-export function DRSPricing({ additionalDevices }: DRSPricingProps) {
+export function DSPricing({ additionalDevices }: DSPricingProps) {
   const { productSettings } = useSettingsStore()
 
   if (additionalDevices <= 0) return null
