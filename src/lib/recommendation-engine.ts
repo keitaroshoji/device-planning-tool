@@ -51,8 +51,6 @@ function buildReasoningMessages(answers: WizardAnswers): string[] {
 }
 
 function selectTrialPack(answers: WizardAnswers): string | null {
-  if (answers.purchaseIntent !== 'trial') return null
-
   if (answers.useCases.includes('video_shooting')) {
     return 'trial_camera'
   }

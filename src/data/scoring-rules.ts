@@ -1,23 +1,6 @@
 import { ScoringRule } from '@/src/types/recommendation'
 
 export const SCORING_RULES: ScoringRule[] = [
-  // === ネットワーク環境 ===
-  {
-    condition: (a) => a.networkEnvironment === 'has_wifi',
-    scores: { mobile_wifi: 20, mobile_cellular: 5 },
-    reason: 'Wi-Fi環境あり → Wi-Fiモデルで十分',
-  },
-  {
-    condition: (a) => a.networkEnvironment === 'no_wifi',
-    scores: { mobile_cellular: 40 },
-    reason: 'Wi-Fi環境なし → セルラーモデル必須',
-  },
-  {
-    condition: (a) => a.networkEnvironment === 'mixed',
-    scores: { mobile_cellular: 30, mobile_wifi: 10 },
-    reason: '混在環境 → セルラーモデルを推奨',
-  },
-
   // === 活用シーン：動画撮影 ===
   {
     condition: (a) => a.useCases.includes('video_shooting'),
@@ -69,32 +52,6 @@ export const SCORING_RULES: ScoringRule[] = [
     reason: 'リッチなマニュアルを作りたい → 動画撮影機材を追加推奨',
   },
 
-  // === MDM状況 ===
-  {
-    condition: (a) => a.mdmStatus === 'has_mdm',
-    scores: { mdm_only: 30, mobile_wifi: -10, mobile_cellular: -10 },
-    reason: 'すでにMDMあり → MDM単体プランを検討',
-  },
-  {
-    condition: (a) => a.mdmStatus === 'no_mdm',
-    scores: { mobile_wifi: 15, mobile_cellular: 15 },
-    reason: 'MDM未導入 → 端末セット（MDM込み）を推奨',
-  },
-
-  // === 既存デバイス ===
-  {
-    condition: (a) => a.currentDevices.includes('no_device'),
-    scores: { mobile_wifi: 25, mobile_cellular: 25 },
-    reason: 'デバイスなし → 端末セット提案',
-  },
-  {
-    condition: (a) =>
-      a.currentDevices.includes('company_smartphone') ||
-      a.currentDevices.includes('company_tablet'),
-    scores: { mdm_only: 20 },
-    reason: '法人端末あり → MDM単体プランも選択肢',
-  },
-
   // === フランチャイズ ===
   {
     condition: (a) => a.isFranchise === true,
@@ -128,10 +85,20 @@ export const SCORING_RULES: ScoringRule[] = [
     reason: '多店舗管理 → セルラーで統一管理',
   },
 
-  // === 購入意向：トライアル ===
+  // === 運用スタイル ===
   {
-    condition: (a) => a.purchaseIntent === 'trial',
-    scores: { mobile_wifi: 5 },
-    reason: 'まずトライアルから → 低コストのWi-Fiモデルから',
+    condition: (a) => a.operationStyle === 'individual',
+    scores: { mobile_cellular: 20, mobile_wifi: 15 },
+    reason: '個人割り振りタイプ → 各自の端末で業務',
+  },
+  {
+    condition: (a) => a.operationStyle === 'workplace_unit',
+    scores: { mobile_cellular: 15, mobile_wifi: 15 },
+    reason: '職場単位タイプ → 拠点ごとに端末配置',
+  },
+  {
+    condition: (a) => a.operationStyle === 'group_training',
+    scores: { smart_monitor: 20, mobile_wifi: 10 },
+    reason: '集合研修タイプ → 大型モニターも選択肢',
   },
 ]

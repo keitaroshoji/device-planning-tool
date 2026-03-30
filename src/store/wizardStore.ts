@@ -4,14 +4,13 @@ import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { WizardAnswers, INITIAL_ANSWERS } from '@/src/types/answers'
 
-export const TOTAL_STEPS = 8
+export const TOTAL_STEPS = 5
 
 interface WizardState {
   currentStep: number
   answers: WizardAnswers
   isComplete: boolean
 
-  // Actions
   setStep: (step: number) => void
   nextStep: () => void
   prevStep: () => void
@@ -48,14 +47,8 @@ export const useWizardStore = create<WizardState>()(
       completeWizard: () => set({ isComplete: true }),
 
       resetWizard: () =>
-        set({
-          currentStep: 1,
-          answers: INITIAL_ANSWERS,
-          isComplete: false,
-        }),
+        set({ currentStep: 1, answers: INITIAL_ANSWERS, isComplete: false }),
     }),
-    {
-      name: 'device-planning-wizard',
-    }
+    { name: 'device-planning-wizard' }
   )
 )
