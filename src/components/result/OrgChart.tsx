@@ -2,6 +2,7 @@ interface OrgChartProps {
   locationCount: number
   devicesPerLocation: number
   totalDevices: number
+  hqDevices?: number
   label: string
   variant: 'current' | 'ideal'
 }
@@ -68,6 +69,7 @@ export function OrgChart({
   locationCount,
   devicesPerLocation,
   totalDevices,
+  hqDevices = 0,
   variant,
 }: OrgChartProps) {
   const displayLocations = Math.min(locationCount, MAX_DISPLAY_LOCATIONS)
@@ -93,8 +95,13 @@ export function OrgChart({
         }`}
       >
         <div className="font-semibold">🏢 本部・本社</div>
+        {hqDevices > 0 && (
+          <div className={`mt-1 font-semibold text-sm ${variant === 'ideal' ? 'text-white' : 'text-gray-100'}`}>
+            {hqDevices}台
+          </div>
+        )}
         {variant === 'ideal' && (
-          <div className="text-blue-200 mt-0.5 text-[10px]">MDM 一元管理</div>
+          <div className={`mt-0.5 text-[10px] ${hqDevices > 0 ? 'text-blue-200' : 'text-blue-200'}`}>MDM 一元管理</div>
         )}
       </div>
 
@@ -141,7 +148,12 @@ export function OrgChart({
             : 'bg-gray-100 text-gray-600'
         }`}
       >
-        合計 {totalDevices}台
+        合計 {totalDevices + hqDevices}台
+        {hqDevices > 0 && (
+          <span className="font-normal text-[10px] ml-1 opacity-70">
+            （本部{hqDevices}＋店舗{totalDevices}）
+          </span>
+        )}
       </div>
     </div>
   )

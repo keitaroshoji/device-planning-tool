@@ -203,7 +203,7 @@ export function ResultView() {
                       <span className="text-sm font-semibold text-gray-700">現状の運用</span>
                     </div>
                     <span className="text-xs text-gray-400">
-                      {currentStoreTotal}台（店舗計） / {answers.locationCount}拠点
+                      本部{currentHQTotal}台 ＋ 店舗{currentStoreTotal}台 / {answers.locationCount}拠点
                     </span>
                   </div>
                   <div className="p-5 space-y-5">
@@ -213,6 +213,7 @@ export function ResultView() {
                         locationCount={answers.locationCount}
                         devicesPerLocation={currentPerLocation}
                         totalDevices={currentStoreTotal}
+                        hqDevices={currentHQTotal}
                         label="現状"
                         variant="current"
                       />
@@ -243,10 +244,10 @@ export function ResultView() {
 
                     {/* Metrics */}
                     <div className="grid grid-cols-3 gap-2">
-                      <MetricCell label="店舗端末（計）" value={`${currentStoreTotal}台`} />
-                      <MetricCell label="1拠点あたり" value={`${currentPerLocation}台`} />
+                      <MetricCell label="端末合計" value={`${currentStoreTotal + currentHQTotal}台`} />
+                      <MetricCell label="店舗 / 拠点" value={`${currentPerLocation}台`} />
                       <MetricCell
-                        label="充足率"
+                        label="充足率（店舗）"
                         value={idealDeviceCount > 0 ? `${Math.round((currentStoreTotal / idealDeviceCount) * 100)}%` : '—'}
                         highlight={currentStoreTotal >= idealDeviceCount ? 'green' : 'red'}
                       />
@@ -265,7 +266,7 @@ export function ResultView() {
                       </span>
                     </div>
                     <span className="text-xs text-blue-500">
-                      {idealDeviceCount}台 / {answers.locationCount}拠点 / MDM管理
+                      本部{currentHQTotal}台 ＋ 店舗{idealDeviceCount}台 / {answers.locationCount}拠点 / MDM管理
                     </span>
                   </div>
                   <div className="p-5 space-y-5">
@@ -275,6 +276,7 @@ export function ResultView() {
                         locationCount={answers.locationCount}
                         devicesPerLocation={devicesPerLocation}
                         totalDevices={idealDeviceCount}
+                        hqDevices={currentHQTotal}
                         label="理想"
                         variant="ideal"
                       />
@@ -296,9 +298,9 @@ export function ResultView() {
 
                     {/* Metrics */}
                     <div className="grid grid-cols-3 gap-2">
-                      <MetricCell label="端末台数" value={`${idealDeviceCount}台`} highlight="blue" />
-                      <MetricCell label="1拠点あたり" value={`${devicesPerLocation}台`} highlight="blue" />
-                      <MetricCell label="充足率" value="100%" highlight="green" />
+                      <MetricCell label="端末合計" value={`${idealDeviceCount + currentHQTotal}台`} highlight="blue" />
+                      <MetricCell label="店舗 / 拠点" value={`${devicesPerLocation}台`} highlight="blue" />
+                      <MetricCell label="充足率（店舗）" value="100%" highlight="green" />
                     </div>
                   </div>
                 </div>
