@@ -17,6 +17,8 @@ interface WizardState {
   updateAnswers: (partial: Partial<WizardAnswers>) => void
   completeWizard: () => void
   resetWizard: () => void
+  /** 診断結果から条件変更モードへ。回答は保持したまま isComplete を解除する */
+  startEdit: (step?: number) => void
 }
 
 export const useWizardStore = create<WizardState>()(
@@ -48,6 +50,9 @@ export const useWizardStore = create<WizardState>()(
 
       resetWizard: () =>
         set({ currentStep: 1, answers: INITIAL_ANSWERS, isComplete: false }),
+
+      startEdit: (step = 1) =>
+        set({ isComplete: false, currentStep: Math.max(1, Math.min(step, TOTAL_STEPS)) }),
     }),
     {
       name: 'device-planning-wizard',

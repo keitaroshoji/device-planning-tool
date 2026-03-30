@@ -50,7 +50,7 @@ const USE_CASE_LABELS: Record<string, string> = {
 
 export function ResultView() {
   const router = useRouter()
-  const { answers, resetWizard } = useWizardStore()
+  const { answers, resetWizard, startEdit } = useWizardStore()
 
   if (!answers.operationStyle) {
     return (
@@ -114,6 +114,15 @@ export function ResultView() {
           <div className="w-px h-4 bg-gray-200" />
           <h1 className="text-sm font-semibold text-gray-700">診断結果</h1>
           <div className="ml-auto flex items-center gap-3">
+            <button
+              onClick={() => { startEdit(1); router.push('/wizard?step=1') }}
+              className="inline-flex items-center gap-1.5 text-sm text-blue-600 border border-blue-200 bg-blue-50 hover:bg-blue-100 px-3 py-1.5 rounded-lg transition-colors font-medium"
+            >
+              <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+              </svg>
+              条件を変更する
+            </button>
             <Button variant="outline" size="sm" onClick={handleReset}>
               やり直す
             </Button>
@@ -187,6 +196,29 @@ export function ResultView() {
                     <div>🏪 店舗端末合計: <span className="font-medium">{currentStoreTotal}台</span></div>
                   </div>
                 </div>
+              </div>
+              {/* Step-by-step edit links */}
+              <div className="px-6 py-3 border-t border-gray-100 bg-gray-50 flex items-center gap-2 flex-wrap">
+                <span className="text-xs text-gray-400 shrink-0">条件を変更：</span>
+                {[
+                  { step: 1, label: '業種・事業形態' },
+                  { step: 2, label: '業務の課題' },
+                  { step: 3, label: '活用シーン' },
+                  { step: 4, label: '端末・環境' },
+                  { step: 5, label: 'マニュアル品質' },
+                  { step: 6, label: '運用スタイル' },
+                ].map(({ step, label }) => (
+                  <button
+                    key={step}
+                    onClick={() => { startEdit(step); router.push(`/wizard?step=${step}`) }}
+                    className="inline-flex items-center gap-1 text-xs text-blue-600 hover:text-blue-800 hover:underline transition-colors"
+                  >
+                    <svg className="w-3 h-3 opacity-60" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z" />
+                    </svg>
+                    {label}
+                  </button>
+                ))}
               </div>
             </div>
 
