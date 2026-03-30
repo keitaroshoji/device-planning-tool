@@ -49,6 +49,25 @@ export const useWizardStore = create<WizardState>()(
       resetWizard: () =>
         set({ currentStep: 1, answers: INITIAL_ANSWERS, isComplete: false }),
     }),
-    { name: 'device-planning-wizard' }
+    {
+      name: 'device-planning-wizard',
+      version: 2,
+      migrate: (persisted, version) => {
+        // v1 and earlier didn't have deviceTypes, environmentConditions,
+        // currentDevicesByType, or headquartersDevicesByType — fill in defaults
+        const old = persisted as Partial<WizardState>
+        return {
+          ...old,
+          answers: {
+            ...INITIAL_ANSWERS,
+            ...(old.answers ?? {}),
+            deviceTypes: old.answers?.deviceTypes ?? [],
+            environmentConditions: old.answers?.environmentConditions ?? [],
+            currentDevicesByType: old.answers?.currentDevicesByType ?? {},
+            headquartersDevicesByType: old.answers?.headquartersDevicesByType ?? {},
+          },
+        }
+      },
+    }
   )
 )

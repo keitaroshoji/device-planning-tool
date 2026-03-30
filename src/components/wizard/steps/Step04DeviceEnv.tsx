@@ -106,7 +106,7 @@ export function Step04DeviceEnv() {
   const { answers, updateAnswers, nextStep } = useWizardStore()
 
   function toggleDeviceType(key: DeviceType) {
-    const current = answers.deviceTypes
+    const current = answers.deviceTypes ?? []
     if (current.includes(key)) {
       updateAnswers({ deviceTypes: current.filter((d) => d !== key) })
     } else {
@@ -115,7 +115,7 @@ export function Step04DeviceEnv() {
   }
 
   function toggleEnv(key: EnvironmentCondition) {
-    const current = answers.environmentConditions
+    const current = answers.environmentConditions ?? []
     if (key === 'normal') {
       // 「通常環境」を選ぶと他をクリア
       updateAnswers({ environmentConditions: ['normal'] })
@@ -134,11 +134,14 @@ export function Step04DeviceEnv() {
     router.push('/wizard?step=5')
   }
 
-  const canProceed =
-    answers.deviceTypes.length > 0 &&
-    answers.environmentConditions.length > 0
+  const deviceTypes = answers.deviceTypes ?? []
+  const environmentConditions = answers.environmentConditions ?? []
 
-  const hasSpecialEnv = answers.environmentConditions.some((e) => e !== 'normal')
+  const canProceed =
+    deviceTypes.length > 0 &&
+    environmentConditions.length > 0
+
+  const hasSpecialEnv = environmentConditions.some((e) => e !== 'normal')
 
   return (
     <div className="space-y-6">
@@ -161,7 +164,7 @@ export function Step04DeviceEnv() {
               onClick={() => toggleDeviceType(item.key)}
               className={`w-full text-left rounded-lg border px-4 py-3 transition-colors
                 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1
-                ${answers.deviceTypes.includes(item.key)
+                ${deviceTypes.includes(item.key)
                   ? 'border-blue-500 bg-blue-50'
                   : 'border-gray-200 bg-white hover:bg-gray-50'
                 }`}
@@ -169,7 +172,7 @@ export function Step04DeviceEnv() {
               <div className="flex items-start gap-3">
                 <span className="text-xl shrink-0 mt-0.5">{item.emoji}</span>
                 <div className="flex-1 min-w-0">
-                  <p className={`font-medium text-sm ${answers.deviceTypes.includes(item.key) ? 'text-blue-700' : 'text-gray-800'}`}>
+                  <p className={`font-medium text-sm ${deviceTypes.includes(item.key) ? 'text-blue-700' : 'text-gray-800'}`}>
                     {item.label}
                   </p>
                   <p className="text-xs text-gray-500 mt-0.5">{item.description}</p>
@@ -181,10 +184,10 @@ export function Step04DeviceEnv() {
                 </div>
                 <div
                   className={`shrink-0 w-4 h-4 rounded border-2 flex items-center justify-center mt-0.5 ${
-                    answers.deviceTypes.includes(item.key) ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
+                    deviceTypes.includes(item.key) ? 'border-blue-500 bg-blue-500' : 'border-gray-300'
                   }`}
                 >
-                  {answers.deviceTypes.includes(item.key) && (
+                  {deviceTypes.includes(item.key) && (
                     <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 12 12">
                       <path strokeLinecap="round" strokeLinejoin="round" d="M2 6l3 3 5-5" />
                     </svg>
@@ -204,7 +207,7 @@ export function Step04DeviceEnv() {
         </p>
         <div className="space-y-2">
           {ENVIRONMENT_CONDITIONS.map((item) => {
-            const selected = answers.environmentConditions.includes(item.key)
+            const selected = environmentConditions.includes(item.key)
             return (
               <button
                 key={item.key}
