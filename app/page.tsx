@@ -72,15 +72,6 @@ export default function Home() {
                     </div>
                   ))}
                 </div>
-                <div className="px-6 py-4 border-t border-gray-100 bg-gray-50 flex justify-center">
-                  <Link
-                    href="/wizard?step=1"
-                    className="inline-flex items-center gap-2 bg-blue-600 text-white text-sm font-semibold px-6 py-2.5 rounded-lg hover:bg-blue-700 transition-colors"
-                  >
-                    <span>▶</span>
-                    さっそく診断を開始する
-                  </Link>
-                </div>
               </div>
 
               {/* Feature cards */}

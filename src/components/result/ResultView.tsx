@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter } from 'next/navigation'
+import { useState } from 'react'
 import { useWizardStore } from '@/src/store/wizardStore'
 import {
   OPERATION_STYLE_META,
@@ -88,6 +89,10 @@ export function ResultView() {
   })
 
   const hasSpecialEnv = answers.environmentConditions.some((e) => e !== 'normal')
+
+  // スライダー台数（初期値 = 算出不足台数、最低1）
+  const sliderMax = Math.max(additionalDevices * 3, 50, 10)
+  const [sliderDevices, setSliderDevices] = useState(() => Math.max(additionalDevices, 1))
 
   // --- 端末種類別 不足台数 ---
   const selectedTypes = answers.deviceTypes ?? []
@@ -490,13 +495,51 @@ export function ResultView() {
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
                     {additionalDevices > 0
-                      ? `追加 ${additionalDevices}台 の基本レンタル費用と、特殊環境対応の追加費用を分けて表示します`
+                      ? `不足台数 ${additionalDevices}台 を基準に、スライダーで台数を調整できます`
                       : '特殊環境対応の追加費用が発生します（基本端末台数の追加は不要です）'}
                   </p>
                 </div>
-                <div className="p-6">
+
+                {/* Slider */}
+                {additionalDevices > 0 && (
+                  <div className="px-6 pt-5 pb-2">
+                    <div className="flex items-center justify-between mb-2">
+                      <label className="text-sm font-medium text-gray-700">シミュレーション台数</label>
+                      <div className="flex items-center gap-2">
+                        {sliderDevices !== additionalDevices && (
+                          <button
+                            onClick={() => setSliderDevices(additionalDevices)}
+                            className="text-xs text-blue-500 hover:underline"
+                          >
+                            算出値に戻す（{additionalDevices}台）
+                          </button>
+                        )}
+                        <span className="text-2xl font-bold text-blue-600 tabular-nums">
+                          {sliderDevices}台
+                        </span>
+                      </div>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={sliderMax}
+                      value={sliderDevices}
+                      onChange={(e) => setSliderDevices(Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-600"
+                    />
+                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>1台</span>
+                      {additionalDevices > 0 && additionalDevices < sliderMax && (
+                        <span className="text-amber-500">▲ 算出不足数 {additionalDevices}台</span>
+                      )}
+                      <span>{sliderMax}台</span>
+                    </div>
+                  </div>
+                )}
+
+                <div className="p-6 pt-4">
                   <DSPricing
-                    additionalDevices={additionalDevices}
+                    additionalDevices={sliderDevices}
                     environmentConditions={answers.environmentConditions}
                   />
                 </div>

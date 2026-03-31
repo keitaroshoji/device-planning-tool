@@ -54,19 +54,15 @@ export function DSPricing({ additionalDevices, environmentConditions = [] }: DSP
   ) as Exclude<EnvironmentCondition, 'normal'>[]
   const hasSpecialEnv = specialEnvConditions.length > 0
 
-  const wifiSetting     = productSettings['mobile_wifi']
-  const cellularSetting = productSettings['mobile_cellular']
-  const showWifi        = wifiSetting?.enabled !== false
-  const showCellular    = cellularSetting?.enabled !== false
-  const hasPriceTable   = (showWifi || showCellular) && additionalDevices > 0
+  // 有効かつ価格が1件以上設定されている製品を全件取得
+  const enabledProducts = Object.values(productSettings).filter(
+    (p) => p.enabled && Object.keys(p.priceTable).length > 0
+  )
+  const hasPriceTable = enabledProducts.length > 0 && additionalDevices > 0
 
   if (!hasPriceTable && !hasSpecialEnv) return null
 
-  const initCost = (() => {
-    if (wifiSetting?.hasInitialCost) return wifiSetting.initialCost
-    if (cellularSetting?.hasInitialCost) return cellularSetting.initialCost
-    return 0
-  })()
+  const initCost = enabledProducts.find((p) => p.hasInitialCost)?.initialCost ?? 0
 
   return (
     <div className="space-y-6">
@@ -95,61 +91,53 @@ export function DSPricing({ additionalDevices, environmentConditions = [] }: DSP
                   <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
                     プラン
                   </th>
-                  {showWifi && (
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      📶 {wifiSetting.name}
-                      <span className="block text-gray-400 normal-case font-normal">Wi-Fi環境あり</span>
-                    </th>
-                  )}
-                  {showCellular && (
-                    <th className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                      📡 {cellularSetting.name}
-                      <span className="block text-gray-400 normal-case font-normal">SIM付き・どこでも使える</span>
-                    </th>
-                  )}
+                  {enabledProducts.map((p) => {
+                    const PRODUCTS_MAP: Record<string, string> = {
+                      mobile_wifi: 'Wi-Fi環境あり',
+                      mobile_cellular: 'SIM付き・どこでも使える',
+                    }
+                    return (
+                      <th key={p.key} className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                        {p.imageEmoji ?? '📱'} {p.name}
+                        {PRODUCTS_MAP[p.key] && (
+                          <span className="block text-gray-400 normal-case font-normal">{PRODUCTS_MAP[p.key]}</span>
+                        )}
+                        {p.description && !PRODUCTS_MAP[p.key] && (
+                          <span className="block text-gray-400 normal-case font-normal truncate max-w-[120px]">{p.description}</span>
+                        )}
+                      </th>
+                    )
+                  })}
                 </tr>
               </thead>
               <tbody className="divide-y divide-gray-50">
                 {PLANS.map(({ months, label, tag }) => {
-                  const wifiUnit = wifiSetting?.priceTable[months]
-                  const cellUnit = cellularSetting?.priceTable[months]
-                  if (!wifiUnit && !cellUnit) return null
+                  const units = enabledProducts.map((p) => p.priceTable[months])
+                  if (units.every((u) => u === undefined)) return null
                   return (
                     <tr key={months} className="hover:bg-gray-50 transition-colors">
                       <td className="px-4 py-3">
                         <span className="font-medium text-gray-700">{label}</span>
                         {tag && (
-                          <span className="ml-2 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-medium">
-                            {tag}
-                          </span>
+                          <span className="ml-2 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-medium">{tag}</span>
                         )}
                       </td>
-                      {showWifi && (
-                        <td className="px-4 py-3 text-right">
-                          {wifiUnit !== undefined ? (
-                            <>
-                              <span className="font-semibold text-gray-800">{fmt(wifiUnit * additionalDevices)}</span>
-                              <span className="text-xs text-gray-400">/月</span>
-                              <div className="text-xs text-gray-400">{fmt(wifiUnit)}/台・月</div>
-                            </>
-                          ) : (
-                            <span className="text-xs text-gray-300">—</span>
-                          )}
-                        </td>
-                      )}
-                      {showCellular && (
-                        <td className="px-4 py-3 text-right">
-                          {cellUnit !== undefined ? (
-                            <>
-                              <span className="font-semibold text-gray-800">{fmt(cellUnit * additionalDevices)}</span>
-                              <span className="text-xs text-gray-400">/月</span>
-                              <div className="text-xs text-gray-400">{fmt(cellUnit)}/台・月</div>
-                            </>
-                          ) : (
-                            <span className="text-xs text-gray-300">—</span>
-                          )}
-                        </td>
-                      )}
+                      {enabledProducts.map((p) => {
+                        const unit = p.priceTable[months]
+                        return (
+                          <td key={p.key} className="px-4 py-3 text-right">
+                            {unit !== undefined ? (
+                              <>
+                                <span className="font-semibold text-gray-800">{fmt(unit * additionalDevices)}</span>
+                                <span className="text-xs text-gray-400">/月</span>
+                                <div className="text-xs text-gray-400">{fmt(unit)}/台・月</div>
+                              </>
+                            ) : (
+                              <span className="text-xs text-gray-300">—</span>
+                            )}
+                          </td>
+                        )
+                      })}
                     </tr>
                   )
                 })}
@@ -157,33 +145,21 @@ export function DSPricing({ additionalDevices, environmentConditions = [] }: DSP
             </table>
           </div>
 
-          {/* Model guide */}
-          <div className="grid grid-cols-2 gap-3">
-            {showWifi && (
-              <div className="border border-gray-200 rounded-lg p-4">
-                <p className="text-xs font-semibold text-gray-600 mb-2">
-                  📶 {wifiSetting.name}が向いている場合
-                </p>
-                <ul className="text-xs text-gray-500 space-y-1">
-                  <li className="flex gap-1.5"><span className="text-green-500 shrink-0">✓</span>全店舗にWi-Fi環境が整っている</li>
-                  <li className="flex gap-1.5"><span className="text-green-500 shrink-0">✓</span>コストを抑えたい</li>
-                  <li className="flex gap-1.5"><span className="text-green-500 shrink-0">✓</span>固定の場所で使うことが多い</li>
-                </ul>
-              </div>
-            )}
-            {showCellular && (
-              <div className="border border-gray-200 rounded-lg p-4">
-                <p className="text-xs font-semibold text-gray-600 mb-2">
-                  📡 {cellularSetting.name}が向いている場合
-                </p>
-                <ul className="text-xs text-gray-500 space-y-1">
-                  <li className="flex gap-1.5"><span className="text-green-500 shrink-0">✓</span>Wi-Fi環境がない・不安定な拠点がある</li>
-                  <li className="flex gap-1.5"><span className="text-green-500 shrink-0">✓</span>複数店舗を同一環境で統一したい</li>
-                  <li className="flex gap-1.5"><span className="text-green-500 shrink-0">✓</span>FC・多拠点展開で標準化が必要</li>
-                </ul>
-              </div>
-            )}
-          </div>
+          {/* Product descriptions */}
+          {enabledProducts.length > 0 && (
+            <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${Math.min(enabledProducts.length, 3)}, 1fr)` }}>
+              {enabledProducts.map((p) => (
+                <div key={p.key} className="border border-gray-200 rounded-lg p-4">
+                  <p className="text-xs font-semibold text-gray-600 mb-1.5">
+                    {p.imageEmoji ?? '📱'} {p.name}
+                  </p>
+                  {p.description && (
+                    <p className="text-xs text-gray-500">{p.description}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
           {/* TCO note */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-xs text-gray-600">

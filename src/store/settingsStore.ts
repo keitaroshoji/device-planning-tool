@@ -3,38 +3,42 @@
 import { create } from 'zustand'
 import { persist } from 'zustand/middleware'
 import { PRODUCTS, INITIAL_COST_PER_UNIT } from '@/src/data/products'
-import { Product, ProductKey } from '@/src/types/products'
+import { ProductKey } from '@/src/types/products'
 
 /** 1製品あたりの設定可能フィールド */
 export interface ProductSetting {
-  key: ProductKey
+  key: string
   name: string
   description: string
   enabled: boolean
   priceTable: Partial<Record<number, number>>
-  initialCost: number        // キッティング費用（台あたり）
+  initialCost: number
   hasInitialCost: boolean
+  /** カスタム追加された製品かどうか */
+  isCustom?: boolean
+  /** カスタム製品用の絵文字アイコン */
+  imageEmoji?: string
+  /** カスタム製品用のカテゴリ */
+  category?: string
 }
 
 export interface SettingsState {
-  /** 製品ごとの設定（デフォルト値から初期化） */
-  productSettings: Record<ProductKey, ProductSetting>
-  /** キッティング共通初期費用（個別設定していない製品に適用） */
+  productSettings: Record<string, ProductSetting>
   globalInitialCost: number
 
-  // Actions
-  updateProduct: (key: ProductKey, patch: Partial<ProductSetting>) => void
-  updatePrice: (key: ProductKey, months: number, price: number | undefined) => void
-  resetProduct: (key: ProductKey) => void
+  updateProduct: (key: string, patch: Partial<ProductSetting>) => void
+  updatePrice: (key: string, months: number, price: number | undefined) => void
+  resetProduct: (key: string) => void
   resetAll: () => void
+  addProduct: (setting: ProductSetting) => void
+  deleteProduct: (key: string) => void
 }
 
-/** デフォルト設定をproducts.tsから生成 */
-function buildDefaultSettings(): Record<ProductKey, ProductSetting> {
-  const result = {} as Record<ProductKey, ProductSetting>
+function buildDefaultSettings(): Record<string, ProductSetting> {
+  const result: Record<string, ProductSetting> = {}
   for (const [key, product] of Object.entries(PRODUCTS)) {
-    result[key as ProductKey] = {
-      key: key as ProductKey,
+    result[key] = {
+      key,
       name: product.name,
       description: product.description,
       enabled: true,
@@ -91,22 +95,38 @@ export const useSettingsStore = create<SettingsState>()(
           productSettings: buildDefaultSettings(),
           globalInitialCost: INITIAL_COST_PER_UNIT,
         }),
+
+      addProduct: (setting) =>
+        set((state) => ({
+          productSettings: {
+            ...state.productSettings,
+            [setting.key]: setting,
+          },
+        })),
+
+      deleteProduct: (key) =>
+        set((state) => {
+          const next = { ...state.productSettings }
+          delete next[key]
+          return { productSettings: next }
+        }),
     }),
     { name: 'device-service-settings' }
   )
 )
 
 /** 設定済みの製品データを Product 型に変換して返す */
-export function toProduct(setting: ProductSetting): Product {
+export function toProduct(setting: ProductSetting) {
+  const base = PRODUCTS[setting.key as ProductKey]
   return {
     key: setting.key,
     name: setting.name,
-    nameEn: PRODUCTS[setting.key]?.nameEn ?? '',
-    category: PRODUCTS[setting.key]?.category ?? 'mobile',
+    nameEn: base?.nameEn ?? '',
+    category: setting.category ?? base?.category ?? 'mobile',
     description: setting.description,
-    features: PRODUCTS[setting.key]?.features ?? [],
+    features: base?.features ?? [],
     priceTable: setting.priceTable as Record<number, number>,
     hasInitialCost: setting.hasInitialCost,
-    imageEmoji: PRODUCTS[setting.key]?.imageEmoji ?? '📱',
+    imageEmoji: setting.imageEmoji ?? base?.imageEmoji ?? '📱',
   }
 }
