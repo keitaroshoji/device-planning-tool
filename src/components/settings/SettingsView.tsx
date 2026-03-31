@@ -220,10 +220,14 @@ function ProductRow({
           </div>
 
           <div className="flex justify-between items-center">
-            {setting.isCustom && onDelete && (
+            {onDelete && (
               confirmDelete ? (
                 <div className="flex items-center gap-3 text-sm">
-                  <span className="text-red-600">本当に削除しますか？</span>
+                  <span className="text-red-600">
+                    {setting.isCustom
+                      ? '本当に削除しますか？'
+                      : 'リストから削除します。「すべてデフォルトに戻す」で復元できます。'}
+                  </span>
                   <button onClick={onDelete} className="text-white bg-red-600 hover:bg-red-700 px-3 py-1 rounded-lg text-xs">削除する</button>
                   <button onClick={() => setConfirmDelete(false)} className="text-gray-500 hover:text-gray-700 px-3 py-1 border border-gray-300 rounded-lg text-xs bg-white">キャンセル</button>
                 </div>
@@ -487,6 +491,7 @@ export function SettingsView() {
                     defaultSetting={DEFAULT_SETTINGS[key]}
                     {...h}
                     onReset={() => resetProduct(key)}
+                    onDelete={() => { deleteProduct(key); handleSaveFlash() }}
                   />
                 )
               })}
