@@ -3,13 +3,17 @@
 import { useState, ReactNode } from 'react'
 
 const CORRECT_PASSWORD = 'lean2026'
+const SESSION_KEY = 'ds-tool-authed'
 
 interface PasswordGateProps {
   children: ReactNode
 }
 
 export function PasswordGate({ children }: PasswordGateProps) {
-  const [authed, setAuthed] = useState(false)
+  const [authed, setAuthed] = useState(() => {
+    if (typeof window === 'undefined') return false
+    return sessionStorage.getItem(SESSION_KEY) === '1'
+  })
   const [input, setInput] = useState('')
   const [error, setError] = useState(false)
   const [shake, setShake] = useState(false)
@@ -17,6 +21,7 @@ export function PasswordGate({ children }: PasswordGateProps) {
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault()
     if (input === CORRECT_PASSWORD) {
+      sessionStorage.setItem(SESSION_KEY, '1')
       setAuthed(true)
     } else {
       setError(true)

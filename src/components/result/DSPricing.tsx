@@ -1,10 +1,13 @@
 'use client'
 
 import { useSettingsStore } from '@/src/store/settingsStore'
+import { PRODUCTS } from '@/src/data/products'
 import { EnvironmentCondition } from '@/src/types/answers'
+import { ProductKey } from '@/src/types/products'
 
 interface DSPricingProps {
   additionalDevices: number
+  cameraCount?: number
   environmentConditions?: EnvironmentCondition[]
 }
 
@@ -46,7 +49,109 @@ function fmt(n: number) {
   return `¥${n.toLocaleString('ja-JP')}`
 }
 
-export function DSPricing({ additionalDevices, environmentConditions = [] }: DSPricingProps) {
+function ProductTable({
+  products,
+  unitCount,
+  label,
+  note,
+}: {
+  products: ReturnType<typeof useSettingsStore.getState>['productSettings'][string][]
+  unitCount: number
+  label: string
+  note?: string
+}) {
+  const initCost = products.find((p) => p.hasInitialCost)?.initialCost ?? 0
+  const PRODUCTS_MAP: Record<string, string> = {
+    mobile_wifi: 'Wi-Fi環境あり',
+    mobile_cellular: 'SIM付き・どこでも使える',
+  }
+
+  return (
+    <div className="space-y-3">
+      <div className="flex items-center justify-between">
+        <div>
+          <p className="text-sm font-semibold text-gray-700">{label}</p>
+          {note && <p className="text-xs text-gray-400 mt-0.5">{note}</p>}
+        </div>
+        {initCost > 0 && (
+          <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded">
+            初期費用（キッティング）{fmt(initCost * unitCount)}（税別）
+          </span>
+        )}
+      </div>
+
+      <div className="overflow-x-auto rounded-lg border border-gray-200">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="bg-gray-50 border-b border-gray-200">
+              <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                プラン
+              </th>
+              {products.map((p) => (
+                <th key={p.key} className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                  {p.imageEmoji ?? '📱'} {p.name}
+                  {PRODUCTS_MAP[p.key] && (
+                    <span className="block text-gray-400 normal-case font-normal">{PRODUCTS_MAP[p.key]}</span>
+                  )}
+                  {p.description && !PRODUCTS_MAP[p.key] && (
+                    <span className="block text-gray-400 normal-case font-normal truncate max-w-[120px]">{p.description}</span>
+                  )}
+                </th>
+              ))}
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-gray-50">
+            {PLANS.map(({ months, label: planLabel, tag }) => {
+              const units = products.map((p) => p.priceTable[months])
+              if (units.every((u) => u === undefined)) return null
+              return (
+                <tr key={months} className="hover:bg-gray-50 transition-colors">
+                  <td className="px-4 py-3">
+                    <span className="font-medium text-gray-700">{planLabel}</span>
+                    {tag && (
+                      <span className="ml-2 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-medium">{tag}</span>
+                    )}
+                  </td>
+                  {products.map((p) => {
+                    const unit = p.priceTable[months]
+                    return (
+                      <td key={p.key} className="px-4 py-3 text-right">
+                        {unit !== undefined ? (
+                          <>
+                            <span className="font-semibold text-gray-800">{fmt(unit * unitCount)}</span>
+                            <span className="text-xs text-gray-400">/月</span>
+                            <div className="text-xs text-gray-400">{fmt(unit)}/台・月</div>
+                          </>
+                        ) : (
+                          <span className="text-xs text-gray-300">—</span>
+                        )}
+                      </td>
+                    )
+                  })}
+                </tr>
+              )
+            })}
+          </tbody>
+        </table>
+      </div>
+
+      <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${Math.min(products.length, 3)}, 1fr)` }}>
+        {products.map((p) => (
+          <div key={p.key} className="border border-gray-200 rounded-lg p-4">
+            <p className="text-xs font-semibold text-gray-600 mb-1.5">
+              {p.imageEmoji ?? '📱'} {p.name}
+            </p>
+            {p.description && (
+              <p className="text-xs text-gray-500">{p.description}</p>
+            )}
+          </div>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+export function DSPricing({ additionalDevices, cameraCount, environmentConditions = [] }: DSPricingProps) {
   const { productSettings } = useSettingsStore()
 
   const specialEnvConditions = environmentConditions.filter(
@@ -54,124 +159,67 @@ export function DSPricing({ additionalDevices, environmentConditions = [] }: DSP
   ) as Exclude<EnvironmentCondition, 'normal'>[]
   const hasSpecialEnv = specialEnvConditions.length > 0
 
-  // 有効かつ価格が1件以上設定されている製品を全件取得
-  const enabledProducts = Object.values(productSettings).filter(
+  // カテゴリで分類
+  const allEnabled = Object.values(productSettings).filter(
     (p) => p.enabled && Object.keys(p.priceTable).length > 0
   )
-  const hasPriceTable = enabledProducts.length > 0 && additionalDevices > 0
 
-  if (!hasPriceTable && !hasSpecialEnv) return null
+  function getCategory(p: typeof allEnabled[number]): string {
+    if (p.category) return p.category
+    const base = PRODUCTS[p.key as ProductKey]
+    return base?.category ?? 'mobile'
+  }
 
-  const initCost = enabledProducts.find((p) => p.hasInitialCost)?.initialCost ?? 0
+  const viewingProducts = allEnabled.filter((p) => getCategory(p) !== 'camera')
+  const cameraProducts = allEnabled.filter((p) => getCategory(p) === 'camera')
+
+  const hasViewingPricing = viewingProducts.length > 0 && additionalDevices > 0
+  const hasCameraPricing = cameraProducts.length > 0 && (cameraCount ?? 0) > 0
+
+  if (!hasViewingPricing && !hasCameraPricing && !hasSpecialEnv) return null
+
+  const sectionIndex = { viewing: 1, camera: hasViewingPricing ? 2 : 1, env: (hasViewingPricing ? 1 : 0) + (hasCameraPricing ? 1 : 0) + 1 }
 
   return (
     <div className="space-y-6">
 
-      {/* ===== BASE ESTIMATE ===== */}
-      {hasPriceTable ? (
+      {/* ===== 閲覧用端末 ===== */}
+      {hasViewingPricing ? (
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-sm font-semibold text-gray-700">① 基本見積（端末レンタル料）</p>
-              <p className="text-xs text-gray-400 mt-0.5">
-                追加 <span className="font-semibold text-gray-600">{additionalDevices}台</span> のレンタル月額概算
-              </p>
-            </div>
-            {initCost > 0 && (
-              <span className="text-xs text-gray-400 bg-gray-100 px-2.5 py-1 rounded">
-                初期費用（キッティング）{fmt(initCost * additionalDevices)}（税別）
-              </span>
-            )}
-          </div>
-
-          <div className="overflow-x-auto rounded-lg border border-gray-200">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="bg-gray-50 border-b border-gray-200">
-                  <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                    プラン
-                  </th>
-                  {enabledProducts.map((p) => {
-                    const PRODUCTS_MAP: Record<string, string> = {
-                      mobile_wifi: 'Wi-Fi環境あり',
-                      mobile_cellular: 'SIM付き・どこでも使える',
-                    }
-                    return (
-                      <th key={p.key} className="text-right px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wide">
-                        {p.imageEmoji ?? '📱'} {p.name}
-                        {PRODUCTS_MAP[p.key] && (
-                          <span className="block text-gray-400 normal-case font-normal">{PRODUCTS_MAP[p.key]}</span>
-                        )}
-                        {p.description && !PRODUCTS_MAP[p.key] && (
-                          <span className="block text-gray-400 normal-case font-normal truncate max-w-[120px]">{p.description}</span>
-                        )}
-                      </th>
-                    )
-                  })}
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-gray-50">
-                {PLANS.map(({ months, label, tag }) => {
-                  const units = enabledProducts.map((p) => p.priceTable[months])
-                  if (units.every((u) => u === undefined)) return null
-                  return (
-                    <tr key={months} className="hover:bg-gray-50 transition-colors">
-                      <td className="px-4 py-3">
-                        <span className="font-medium text-gray-700">{label}</span>
-                        {tag && (
-                          <span className="ml-2 text-xs bg-blue-50 text-blue-600 px-2 py-0.5 rounded font-medium">{tag}</span>
-                        )}
-                      </td>
-                      {enabledProducts.map((p) => {
-                        const unit = p.priceTable[months]
-                        return (
-                          <td key={p.key} className="px-4 py-3 text-right">
-                            {unit !== undefined ? (
-                              <>
-                                <span className="font-semibold text-gray-800">{fmt(unit * additionalDevices)}</span>
-                                <span className="text-xs text-gray-400">/月</span>
-                                <div className="text-xs text-gray-400">{fmt(unit)}/台・月</div>
-                              </>
-                            ) : (
-                              <span className="text-xs text-gray-300">—</span>
-                            )}
-                          </td>
-                        )
-                      })}
-                    </tr>
-                  )
-                })}
-              </tbody>
-            </table>
-          </div>
-
-          {/* Product descriptions */}
-          {enabledProducts.length > 0 && (
-            <div className={`grid gap-3`} style={{ gridTemplateColumns: `repeat(${Math.min(enabledProducts.length, 3)}, 1fr)` }}>
-              {enabledProducts.map((p) => (
-                <div key={p.key} className="border border-gray-200 rounded-lg p-4">
-                  <p className="text-xs font-semibold text-gray-600 mb-1.5">
-                    {p.imageEmoji ?? '📱'} {p.name}
-                  </p>
-                  {p.description && (
-                    <p className="text-xs text-gray-500">{p.description}</p>
-                  )}
-                </div>
-              ))}
-            </div>
-          )}
-
+          <p className="text-sm font-semibold text-gray-700">
+            ① 閲覧用端末レンタル料
+          </p>
+          <ProductTable
+            products={viewingProducts}
+            unitCount={additionalDevices}
+            label="閲覧用端末（スマートフォン・タブレット・モニターなど）"
+            note={`追加 ${additionalDevices}台 のレンタル月額概算`}
+          />
           {/* TCO note */}
           <div className="bg-gray-50 border border-gray-200 rounded-lg px-4 py-3 text-xs text-gray-600">
             <span className="font-semibold text-gray-700">TCOで考えると端末コストは約31.9%</span>　—
             残り68.1%は管理・教育・業務コスト。MDM管理・サポート・代替機対応をすべて込みにすることで、隠れたコストを大幅に削減します。
           </div>
         </div>
-      ) : (
-        /* additionalDevices = 0 だが special env あり */
+      ) : !hasCameraPricing && !hasSpecialEnv ? null : (
         <div className="bg-green-50 border border-green-200 rounded-lg px-4 py-3 text-sm text-green-700">
-          <p className="font-semibold mb-0.5">① 基本見積（端末レンタル料）</p>
+          <p className="font-semibold mb-0.5">① 閲覧用端末レンタル料</p>
           <p className="text-xs text-green-600">現在の端末台数は必要台数を満たしているため、追加レンタルは不要です。</p>
+        </div>
+      )}
+
+      {/* ===== 撮影用端末 ===== */}
+      {hasCameraPricing && (
+        <div className="space-y-4">
+          <p className="text-sm font-semibold text-gray-700">
+            {hasViewingPricing ? '② ' : '① '}撮影用端末レンタル料
+          </p>
+          <ProductTable
+            products={cameraProducts}
+            unitCount={cameraCount!}
+            label="撮影用端末（カメラセット）"
+            note={`${cameraCount}台 のレンタル月額概算 ※撮影担当者数・拠点数に応じて調整ください`}
+          />
         </div>
       )}
 
@@ -181,9 +229,11 @@ export function DSPricing({ additionalDevices, environmentConditions = [] }: DSP
           <div className="bg-amber-50 px-5 py-3 border-b border-amber-200 flex items-center gap-2">
             <span className="text-amber-600 text-base">⚠</span>
             <div>
-              <p className="text-sm font-semibold text-amber-800">② 特殊環境対応 追加費用（別途見積）</p>
+              <p className="text-sm font-semibold text-amber-800">
+                {sectionIndex.env === 1 ? '①' : sectionIndex.env === 2 ? '②' : '③'} 特殊環境対応 追加費用（別途見積）
+              </p>
               <p className="text-xs text-amber-600 mt-0.5">
-                端末台数は①の基本見積から変わりません。環境条件への対応にカバー・アクセサリー等の追加投資が必要です。
+                端末台数は上記の基本見積から変わりません。環境条件への対応にカバー・アクセサリー等の追加投資が必要です。
               </p>
             </div>
           </div>
@@ -211,7 +261,7 @@ export function DSPricing({ additionalDevices, environmentConditions = [] }: DSP
             <div className="pt-3 border-t border-amber-100 flex items-start gap-2 text-xs text-amber-700 bg-amber-50 rounded-lg px-3 py-2.5">
               <span className="shrink-0 font-bold">※</span>
               <p>
-                上記アクセサリー・対応部材の費用は基本見積（①）には含まれません。
+                上記アクセサリー・対応部材の費用は基本見積には含まれません。
                 利用環境・台数・規格要件をもとに<strong>担当者が個別にお見積り</strong>いたします。
               </p>
             </div>

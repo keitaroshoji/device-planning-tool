@@ -5,6 +5,7 @@ interface OrgChartProps {
   hqDevices?: number
   label: string
   variant: 'current' | 'ideal'
+  staffPerLocation?: number
 }
 
 const MAX_DISPLAY_LOCATIONS = 4
@@ -15,11 +16,13 @@ function StoreCard({
   devices,
   maxDevices,
   variant,
+  staffPerLocation,
 }: {
   index: number
   devices: number
   maxDevices: number
   variant: 'current' | 'ideal'
+  staffPerLocation?: number
 }) {
   const displayDevices = Math.min(devices, MAX_DEVICE_ICONS)
   const displayMax = Math.min(maxDevices, MAX_DEVICE_ICONS)
@@ -35,7 +38,12 @@ function StoreCard({
           : 'border-gray-200 bg-white'
       }`}
     >
-      <div className="font-medium text-gray-600 mb-1.5">店舗 {index + 1}</div>
+      <div className="font-medium text-gray-600 mb-1">店舗 {index + 1}</div>
+      {staffPerLocation !== undefined && staffPerLocation > 0 && (
+        <div className="text-[10px] text-gray-400 mb-1">
+          👤 {staffPerLocation}人
+        </div>
+      )}
       {/* Device icons */}
       <div className="flex flex-wrap justify-center gap-0.5 min-h-[22px] items-center">
         {Array.from({ length: displayMax }).map((_, i) => (
@@ -71,6 +79,7 @@ export function OrgChart({
   totalDevices,
   hqDevices = 0,
   variant,
+  staffPerLocation,
 }: OrgChartProps) {
   const displayLocations = Math.min(locationCount, MAX_DISPLAY_LOCATIONS)
   const hasMore = locationCount > MAX_DISPLAY_LOCATIONS
@@ -83,6 +92,10 @@ export function OrgChart({
   })
 
   const lineColor = variant === 'ideal' ? 'bg-blue-300' : 'bg-gray-300'
+
+  const totalStaff = staffPerLocation !== undefined && staffPerLocation > 0
+    ? staffPerLocation * locationCount
+    : null
 
   return (
     <div className="flex flex-col items-center gap-2">
@@ -126,6 +139,7 @@ export function OrgChart({
               devices={devices}
               maxDevices={variant === 'ideal' ? devicesPerLocation : Math.max(1, Math.ceil(totalDevices / locationCount))}
               variant={variant}
+              staffPerLocation={staffPerLocation}
             />
           </div>
         ))}
@@ -155,6 +169,13 @@ export function OrgChart({
           </span>
         )}
       </div>
+
+      {/* Staff total */}
+      {totalStaff !== null && (
+        <div className="text-[10px] text-gray-400">
+          👤 店舗スタッフ合計 {totalStaff}人（{staffPerLocation}人 × {locationCount}拠点）
+        </div>
+      )}
     </div>
   )
 }

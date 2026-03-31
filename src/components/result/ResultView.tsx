@@ -94,6 +94,10 @@ export function ResultView() {
   const sliderMax = Math.max(additionalDevices * 3, 50, 10)
   const [sliderDevices, setSliderDevices] = useState(() => Math.max(additionalDevices, 1))
 
+  // 撮影用端末スライダー（video_shooting が選択された場合のみ表示）
+  const hasVideoShooting = answers.useCases.includes('video_shooting')
+  const [sliderCameras, setSliderCameras] = useState(1)
+
   // --- 端末種類別 不足台数 ---
   const selectedTypes = answers.deviceTypes ?? []
 
@@ -292,6 +296,7 @@ export function ResultView() {
                         hqDevices={currentHQTotal}
                         label="現状"
                         variant="current"
+                        staffPerLocation={answers.staffPerLocation}
                       />
                     </div>
 
@@ -355,6 +360,7 @@ export function ResultView() {
                         hqDevices={currentHQTotal}
                         label="理想"
                         variant="ideal"
+                        staffPerLocation={answers.staffPerLocation}
                       />
                     </div>
 
@@ -487,24 +493,24 @@ export function ResultView() {
             </div>
 
             {/* ===== DS PRICING ===== */}
-            {(additionalDevices > 0 || hasSpecialEnv) && (
+            {(additionalDevices > 0 || hasSpecialEnv || hasVideoShooting) && (
               <div className="bg-white rounded-xl border border-gray-200 overflow-hidden">
                 <div className="px-6 py-4 border-b border-gray-100 bg-gray-50">
                   <h2 className="text-sm font-semibold text-gray-700">
                     DS デバイスサービス 概算見積
                   </h2>
                   <p className="text-xs text-gray-400 mt-0.5">
-                    {additionalDevices > 0
-                      ? `不足台数 ${additionalDevices}台 を基準に、スライダーで台数を調整できます`
-                      : '特殊環境対応の追加費用が発生します（基本端末台数の追加は不要です）'}
+                    スライダーで台数を調整すると月額概算が更新されます
                   </p>
                 </div>
 
-                {/* Slider */}
+                {/* 閲覧用スライダー */}
                 {additionalDevices > 0 && (
                   <div className="px-6 pt-5 pb-2">
-                    <div className="flex items-center justify-between mb-2">
-                      <label className="text-sm font-medium text-gray-700">シミュレーション台数</label>
+                    <div className="flex items-center justify-between mb-1">
+                      <label className="text-sm font-medium text-gray-700">
+                        📱 閲覧用端末（スマートフォン・タブレット・モニターなど）
+                      </label>
                       <div className="flex items-center gap-2">
                         {sliderDevices !== additionalDevices && (
                           <button
@@ -537,9 +543,41 @@ export function ResultView() {
                   </div>
                 )}
 
+                {/* 撮影用スライダー */}
+                {hasVideoShooting && (
+                  <div className="px-6 pt-4 pb-2">
+                    <div className="flex items-center justify-between mb-1">
+                      <div>
+                        <label className="text-sm font-medium text-gray-700">
+                          🎥 撮影用端末（カメラセット）
+                        </label>
+                        <p className="text-xs text-gray-400 mt-0.5">
+                          撮影担当者数・拠点数に応じて設定ください
+                        </p>
+                      </div>
+                      <span className="text-2xl font-bold text-blue-600 tabular-nums">
+                        {sliderCameras}台
+                      </span>
+                    </div>
+                    <input
+                      type="range"
+                      min={1}
+                      max={20}
+                      value={sliderCameras}
+                      onChange={(e) => setSliderCameras(Number(e.target.value))}
+                      className="w-full h-2 bg-gray-200 rounded-full appearance-none cursor-pointer accent-blue-600"
+                    />
+                    <div className="flex justify-between text-xs text-gray-400 mt-1">
+                      <span>1台</span>
+                      <span>20台</span>
+                    </div>
+                  </div>
+                )}
+
                 <div className="p-6 pt-4">
                   <DSPricing
                     additionalDevices={sliderDevices}
+                    cameraCount={hasVideoShooting ? sliderCameras : undefined}
                     environmentConditions={answers.environmentConditions}
                   />
                 </div>

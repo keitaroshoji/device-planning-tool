@@ -22,12 +22,7 @@ export function WizardShell() {
     }
   }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
-  // isComplete かつ operationStyle が入力済みの場合のみ結果へ遷移
-  useEffect(() => {
-    if (isComplete && answers.operationStyle !== null) {
-      router.push('/result')
-    }
-  }, [isComplete, answers.operationStyle, router])
+  // 完了後のリダイレクトは Step6 の handleSubmit が明示的に行うため、ここでは不要
 
   function handleBack() {
     if (currentStep === 1) {

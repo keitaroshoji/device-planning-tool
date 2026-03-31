@@ -3,8 +3,11 @@
 import Link from 'next/link'
 import { AppSidebar } from '@/src/components/ui/AppSidebar'
 import { PasswordGate } from '@/src/components/ui/PasswordGate'
+import { useWizardStore } from '@/src/store/wizardStore'
 
 export default function Home() {
+  const resetWizard = useWizardStore((s) => s.resetWizard)
+
   return (
     <PasswordGate>
       <div className="min-h-screen bg-gray-50 flex">
@@ -38,6 +41,7 @@ export default function Home() {
                 </p>
                 <Link
                   href="/wizard?step=1"
+                  onClick={resetWizard}
                   className="inline-flex items-center gap-2 bg-white text-blue-600 text-base font-bold px-8 py-3.5 rounded-xl hover:bg-blue-50 transition-colors shadow-sm"
                 >
                   <span className="text-lg">▶</span>
