@@ -39,11 +39,17 @@ export function Step03UseCases() {
       if (key === 'video_shooting') {
         patch.shootingEnvironment = null
         patch.shootingViewpoint = null
+        patch.cameraCount = 1
       }
       updateAnswers(patch)
     } else {
       updateAnswers({ useCases: [...current, key] })
     }
+  }
+
+  function handleCameraCount(delta: number) {
+    const next = Math.min(20, Math.max(1, (answers.cameraCount ?? 1) + delta))
+    updateAnswers({ cameraCount: next })
   }
 
   function handleNext() {
@@ -54,7 +60,9 @@ export function Step03UseCases() {
   const canProceed =
     answers.useCases.length > 0 &&
     (!hasVideoShooting ||
-      (answers.shootingEnvironment !== null && answers.shootingViewpoint !== null))
+      (answers.shootingEnvironment !== null &&
+        answers.shootingViewpoint !== null &&
+        (answers.cameraCount ?? 1) >= 1))
 
   return (
     <div className="space-y-6">
@@ -107,6 +115,38 @@ export function Step03UseCases() {
                   description={item.description}
                 />
               ))}
+            </div>
+          </div>
+
+          <div className="space-y-3">
+            <div>
+              <p className="text-sm font-medium text-gray-700">カメラセットは合計何台必要ですか？</p>
+              <p className="text-xs text-gray-400 mt-0.5">全拠点合計の撮影用台数（閲覧用端末とは別にカウント）</p>
+            </div>
+            <div className="flex items-center gap-4">
+              <button
+                type="button"
+                onClick={() => handleCameraCount(-1)}
+                disabled={(answers.cameraCount ?? 1) <= 1}
+                className="w-9 h-9 rounded-full border-2 border-gray-300 text-gray-600 text-lg font-bold flex items-center justify-center hover:border-blue-400 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                −
+              </button>
+              <div className="text-center min-w-[60px]">
+                <span className="text-3xl font-bold text-blue-600 tabular-nums">
+                  {answers.cameraCount ?? 1}
+                </span>
+                <span className="text-sm text-gray-500 ml-1">台</span>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleCameraCount(1)}
+                disabled={(answers.cameraCount ?? 1) >= 20}
+                className="w-9 h-9 rounded-full border-2 border-gray-300 text-gray-600 text-lg font-bold flex items-center justify-center hover:border-blue-400 hover:text-blue-600 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              >
+                ＋
+              </button>
+              <span className="text-xs text-gray-400">（最大20台）</span>
             </div>
           </div>
         </div>

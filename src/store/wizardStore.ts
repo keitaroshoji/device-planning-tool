@@ -56,10 +56,9 @@ export const useWizardStore = create<WizardState>()(
     }),
     {
       name: 'device-planning-wizard',
-      version: 2,
+      version: 3,
       migrate: (persisted, version) => {
-        // v1 and earlier didn't have deviceTypes, environmentConditions,
-        // currentDevicesByType, or headquartersDevicesByType — fill in defaults
+        // Ensure all fields introduced in each version have defaults
         const old = persisted as Partial<WizardState>
         return {
           ...old,
@@ -70,6 +69,7 @@ export const useWizardStore = create<WizardState>()(
             environmentConditions: old.answers?.environmentConditions ?? [],
             currentDevicesByType: old.answers?.currentDevicesByType ?? {},
             headquartersDevicesByType: old.answers?.headquartersDevicesByType ?? {},
+            cameraCount: old.answers?.cameraCount ?? 1,
           },
         }
       },

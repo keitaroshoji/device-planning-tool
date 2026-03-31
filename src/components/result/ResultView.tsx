@@ -96,7 +96,7 @@ export function ResultView() {
 
   // 撮影用端末スライダー（video_shooting が選択された場合のみ表示）
   const hasVideoShooting = answers.useCases.includes('video_shooting')
-  const [sliderCameras, setSliderCameras] = useState(1)
+  const [sliderCameras, setSliderCameras] = useState(() => answers.cameraCount ?? 1)
 
   // --- 端末種類別 不足台数 ---
   const selectedTypes = answers.deviceTypes ?? []

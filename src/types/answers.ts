@@ -81,6 +81,9 @@ export interface WizardAnswers {
   // Step 5: マニュアルの品質
   manualQuality: ManualQuality
 
+  // Step 3: 撮影用カメラ台数（video_shooting 選択時のみ使用）
+  cameraCount: number
+
   // Step 6: 運用スタイルと現状確認
   operationStyle: OperationStyle | null
   locationCount: number
@@ -108,6 +111,7 @@ export const INITIAL_ANSWERS: WizardAnswers = {
   useCases: [],
   shootingEnvironment: null,
   shootingViewpoint: null,
+  cameraCount: 1,
   deviceTypes: [],
   environmentConditions: [],
   manualQuality: null,
